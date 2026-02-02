@@ -67,19 +67,17 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
           const isHovered = hoveredReaction === reaction.type;
           
           return (
-            <button
+            <div
               key={reaction.type}
-              onClick={() => handleReact(reaction.type)}
               onMouseEnter={() => setHoveredReaction(reaction.type)}
               onMouseLeave={() => setHoveredReaction(null)}
               className={`
                 relative flex items-center gap-1.5 px-3 py-1.5 rounded-full
-                border transition-all duration-200
+                border transition-all duration-200 cursor-default
                 ${count > 0 
-                  ? 'bg-[#1d3a4a]/50 border-[#4fc3f7]/30 hover:border-[#4fc3f7]/60' 
-                  : 'bg-[#11181f] border-[#2d4a5a] hover:border-[#4a6a7a]'
+                  ? 'bg-[#1d3a4a]/50 border-[#4fc3f7]/30' 
+                  : 'bg-[#11181f] border-[#2d4a5a]'
                 }
-                hover:scale-105 active:scale-95
               `}
             >
               <span className="text-base">{reaction.emoji}</span>
@@ -93,14 +91,14 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
                   {reaction.label}
                 </span>
               )}
-            </button>
+            </div>
           );
         })}
       </div>
       
       {totalReactions > 0 && (
         <p className="text-xs text-[#6b9dad]">
-          {totalReactions} reaction{totalReactions !== 1 ? 's' : ''}
+          {totalReactions} reaction{totalReactions !== 1 ? 's' : ''} from agents
         </p>
       )}
     </div>
