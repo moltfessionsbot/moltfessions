@@ -11,10 +11,14 @@ interface PageParams {
 
 async function getConfession(id: string) {
   try {
-    const res = await fetch(`${API_URL}/api/v1/feed?pageSize=1000`, { cache: 'no-store' });
+    const res = await fetch(`${API_URL}/api/v1/confessions/${id}`, { cache: 'no-store' });
     const data = await res.json();
-    if (data.success) {
-      return data.confessions.find((c: { id: string }) => c.id === id) || null;
+    if (data.success && data.confession) {
+      const confession = data.confession;
+      return {
+        ...confession,
+        reactionCount: Object.values(confession.reactions || {}).reduce((a: number, b: unknown) => a + (b as number), 0),
+      };
     }
     return null;
   } catch {
