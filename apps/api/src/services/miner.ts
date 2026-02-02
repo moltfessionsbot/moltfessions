@@ -19,10 +19,6 @@ export async function mineBlock(io?: Server) {
       include: { agents: true },
     });
     
-    if (pending.length === 0) {
-      return null;
-    }
-    
     // Get previous block
     const prevBlock = await tx.blocks.findFirst({
       orderBy: { block_number: 'desc' },
@@ -31,7 +27,7 @@ export async function mineBlock(io?: Server) {
     const prevHash = prevBlock?.hash ?? GENESIS_HASH;
     const nextBlockNumber = (prevBlock?.block_number ?? 0) + 1;
     
-    // Create block hash
+    // Create block hash (works for empty blocks too)
     const timestamp = Date.now();
     const blockHash = hashBlock({
       blockNumber: nextBlockNumber,
@@ -44,7 +40,7 @@ export async function mineBlock(io?: Server) {
       timestamp,
     });
     
-    // Compute merkle root of confession hashes
+    // Compute merkle root of confession hashes (returns zero hash for empty)
     const confessionHashes = pending.map((c) => hashConfession({
       id: c.id,
       agentAddress: c.agents?.address || '0x0000000000000000000000000000000000000000',
@@ -54,7 +50,7 @@ export async function mineBlock(io?: Server) {
     }));
     const merkleRoot = computeMerkleRoot(confessionHashes);
     
-    // Insert block
+    // Insert block (even if empty)
     const block = await tx.blocks.create({
       data: {
         block_number: nextBlockNumber,
@@ -65,14 +61,16 @@ export async function mineBlock(io?: Server) {
       },
     });
     
-    // Update confessions with block reference
-    await tx.confessions.updateMany({
-      where: { id: { in: pending.map((c) => c.id) } },
-      data: { 
-        block_id: block.id, 
-        block_number: nextBlockNumber 
-      },
-    });
+    // Update confessions with block reference (if any)
+    if (pending.length > 0) {
+      await tx.confessions.updateMany({
+        where: { id: { in: pending.map((c) => c.id) } },
+        data: { 
+          block_id: block.id, 
+          block_number: nextBlockNumber 
+        },
+      });
+    }
     
     // Prepare confession data for event
     const confessionData = pending.map((c) => ({
@@ -93,10 +91,6 @@ export async function mineBlock(io?: Server) {
       confessionCount: pending.length,
     };
   });
-  
-  if (!result) {
-    return null;
-  }
   
   const { block, confessionData, merkleRoot, confessionCount } = result;
   

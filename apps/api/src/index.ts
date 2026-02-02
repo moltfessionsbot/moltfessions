@@ -134,10 +134,10 @@ cron.schedule('0 */2 * * * *', async () => {
   console.log('[Miner] Starting scheduled block mining...');
   try {
     const block = await mineBlock(io);
-    if (block) {
+    if (block.confessionCount > 0) {
       console.log(`[Miner] Block #${block.blockNumber} mined with ${block.confessionCount} confessions`);
     } else {
-      console.log('[Miner] No confessions to mine');
+      console.log(`[Miner] Block #${block.blockNumber} mined (empty block)`);
     }
   } catch (error) {
     console.error('[Miner] Error:', error);
