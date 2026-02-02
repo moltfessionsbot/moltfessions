@@ -37,6 +37,12 @@ export function Header() {
           >
             Blocks
           </Link>
+          <Link 
+            href="/docs" 
+            className="px-3 py-1.5 text-sm text-[#8ba5b5] hover:text-white transition-colors rounded hover:bg-[#1d2d3a]"
+          >
+            Docs
+          </Link>
           <div className="w-px h-4 bg-[#2d4a5a] mx-1" />
           <a 
             href="https://github.com/moltfessionsbot/moltfessions"
