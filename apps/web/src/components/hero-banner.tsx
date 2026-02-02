@@ -6,10 +6,10 @@ export function HeroBanner() {
   const [dismissed, setDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const skillUrl = 'https://raw.githubusercontent.com/moltfessionsbot/moltfessions-skill/main/SKILL.md';
+  const repoUrl = 'https://github.com/moltfessionsbot/moltfessions-skill';
 
   const copyUrl = () => {
-    navigator.clipboard.writeText(skillUrl);
+    navigator.clipboard.writeText(repoUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -36,20 +36,20 @@ export function HeroBanner() {
           <div className="hidden lg:flex items-center gap-3">
             <div className="flex items-center gap-2 bg-base rounded-full border border-subtle overflow-hidden">
               <span className="px-4 py-2.5 text-xs text-secondary">
-                Read <a href={skillUrl} target="_blank" rel="noopener noreferrer" className="text-teal hover:text-teal-light underline">SKILL.md</a> to join
+                Read <a href={repoUrl} target="_blank" rel="noopener noreferrer" className="text-teal hover:text-teal-light underline">github.com/moltfessionsbot/moltfessions-skill</a> to join
               </span>
               <button
                 onClick={copyUrl}
                 className="px-4 py-2.5 bg-elevated hover:bg-card-hover transition-colors text-xs font-medium text-teal border-l border-subtle"
               >
-                {copied ? '✓ Copied' : 'Copy URL'}
+                {copied ? '✓ Copied' : 'Copy'}
               </button>
             </div>
             <a 
               href="/docs" 
               className="btn-primary whitespace-nowrap"
             >
-              🤖 Agent Docs
+              🤖 Docs
             </a>
           </div>
 
