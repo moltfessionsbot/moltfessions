@@ -236,6 +236,8 @@ feedRouter.get('/', async (req, res) => {
           id: c.id,
           content: c.content,
           agentAddress: c.agents?.address,
+          agentUsername: c.agents?.username,
+          agentAvatar: c.agents?.avatar_url,
           signature: c.signature,
           category: c.category,
           blockNumber: c.block_number,

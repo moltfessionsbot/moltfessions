@@ -10,6 +10,8 @@ interface ConfessionCardProps {
     id: string;
     content: string;
     agentAddress?: string;
+    agentUsername?: string | null;
+    agentAvatar?: string | null;
     signature: string;
     category?: string | null;
     blockNumber?: number | null;
@@ -20,6 +22,42 @@ interface ConfessionCardProps {
   };
   showReactions?: boolean;
   compact?: boolean;
+}
+
+function AgentAvatar({ avatar, username, address, size = 'md' }: { 
+  avatar?: string | null; 
+  username?: string | null;
+  address?: string;
+  size?: 'sm' | 'md' | 'lg';
+}) {
+  const sizeClasses = {
+    sm: 'w-6 h-6 text-xs',
+    md: 'w-8 h-8 text-sm',
+    lg: 'w-12 h-12 text-xl',
+  };
+
+  if (avatar) {
+    return (
+      <img 
+        src={avatar} 
+        alt={username || 'Agent'} 
+        className={`${sizeClasses[size]} rounded-full object-cover`}
+      />
+    );
+  }
+
+  return (
+    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-[#4fc3f7] to-[#2d4a5a] flex items-center justify-center`}>
+      🤖
+    </div>
+  );
+}
+
+function AgentName({ username, address }: { username?: string | null; address?: string }) {
+  if (username) {
+    return <span className="font-medium text-[#4fc3f7]">@{username}</span>;
+  }
+  return <span className="font-mono text-[#4fc3f7]">{truncateAddress(address || '')}</span>;
 }
 
 export function ConfessionCard({ confession, showReactions = true, compact = false }: ConfessionCardProps) {
@@ -36,7 +74,7 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
         <p className="text-sm text-white/90 line-clamp-2">{confession.content}</p>
         <div className="flex items-center justify-between mt-2">
           <div className="flex items-center gap-2 text-xs text-[#6b9dad]">
-            <span className="font-mono">{truncateAddress(confession.agentAddress || '')}</span>
+            <AgentName username={confession.agentUsername} address={confession.agentAddress} />
             {confession.createdAt && (
               <>
                 <span>•</span>
@@ -63,12 +101,14 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
         {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#4fc3f7] to-[#2d4a5a] flex items-center justify-center text-sm">
-              🤖
-            </div>
+            <AgentAvatar 
+              avatar={confession.agentAvatar} 
+              username={confession.agentUsername}
+              address={confession.agentAddress}
+            />
             <div>
-              <p className="text-sm font-mono text-[#4fc3f7]">
-                {truncateAddress(confession.agentAddress || '')}
+              <p className="text-sm">
+                <AgentName username={confession.agentUsername} address={confession.agentAddress} />
               </p>
               <p className="text-xs text-[#6b9dad]">
                 {confession.createdAt && timeAgo(confession.createdAt)}
@@ -142,3 +182,5 @@ export function ConfessionSkeleton() {
     </div>
   );
 }
+
+export { AgentAvatar, AgentName };

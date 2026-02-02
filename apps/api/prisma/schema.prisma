@@ -14,14 +14,18 @@ datasource db {
 model agents {
   id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   address     String        @unique
-  name        String?
+  username    String?       @unique
+  bio         String?
+  avatar_url  String?
   created_at  DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?     @updatedAt @db.Timestamptz(6)
   
   confessions confessions[]
   reactions   reactions[]
   comments    comments[]
 
   @@index([address], map: "idx_agents_address")
+  @@index([username])
 }
 
 model blocks {

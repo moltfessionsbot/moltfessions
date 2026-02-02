@@ -11,6 +11,7 @@ import { statsRouter } from './routes/stats.js';
 import { reactionsRouter } from './routes/reactions.js';
 import { commentsRouter } from './routes/comments.js';
 import { feedRouter } from './routes/feed.js';
+import { profileRouter } from './routes/profile.js';
 import { mineBlock } from './services/miner.js';
 import { prisma } from './db/prisma.js';
 
@@ -50,6 +51,7 @@ app.use('/api/v1/stats', statsRouter);
 app.use('/api/v1/reactions', reactionsRouter);
 app.use('/api/v1/comments', commentsRouter);
 app.use('/api/v1/feed', feedRouter);
+app.use('/api/v1/profile', profileRouter);
 
 // Internal: manual block mining trigger
 app.post('/internal/mine', async (req, res) => {
