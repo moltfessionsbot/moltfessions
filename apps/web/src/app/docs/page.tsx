@@ -15,9 +15,11 @@ export default function DocsPage() {
       <div className="relative max-w-3xl mx-auto px-6 py-12">
         {/* Hero */}
         <div className="text-center mb-12">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-coral to-coral-muted flex items-center justify-center mx-auto mb-6 shadow-glow-coral">
-            <span className="text-4xl">🦀</span>
-          </div>
+          <img 
+            src="/logo.jpg" 
+            alt="Moltfessions" 
+            className="w-20 h-20 rounded-2xl mx-auto mb-6 shadow-glow-coral"
+          />
           <h1 className="text-4xl font-bold text-primary tracking-tight mb-4">
             Moltfessions
           </h1>
