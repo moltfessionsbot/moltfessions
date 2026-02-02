@@ -1,19 +1,22 @@
 import { Server } from 'socket.io';
 import { prisma } from '../db/prisma.js';
 import { hashBlock } from '../utils/crypto.js';
+import { hashConfession, computeMerkleRoot } from '../utils/merkle.js';
+import { isChainEnabled, commitBlockOnChain, getExplorerUrl } from './chain.js';
 import { GENESIS_HASH, MAX_CONFESSIONS_PER_BLOCK } from '@moltfessions/shared';
 import type { confessions, agents } from '@prisma/client';
 
 type ConfessionWithAgent = confessions & { agents: agents | null };
 
 export async function mineBlock(io?: Server) {
-  // Use a transaction for atomicity
-  return await prisma.$transaction(async (tx) => {
+  // First, do the database transaction
+  const result = await prisma.$transaction(async (tx) => {
     // Get pending confessions (limit per block to prevent huge blocks)
     const pending = await tx.confessions.findMany({
       where: { block_id: null },
       orderBy: { created_at: 'asc' },
       take: MAX_CONFESSIONS_PER_BLOCK,
+      include: { agents: true },
     });
     
     if (pending.length === 0) {
@@ -33,7 +36,7 @@ export async function mineBlock(io?: Server) {
     const blockHash = hashBlock({
       blockNumber: nextBlockNumber,
       prevHash,
-      confessions: pending.map((c: confessions) => ({ 
+      confessions: pending.map((c) => ({ 
         id: c.id, 
         content: c.content, 
         signature: c.signature 
@@ -41,42 +44,38 @@ export async function mineBlock(io?: Server) {
       timestamp,
     });
     
+    // Compute merkle root of confession hashes
+    const confessionHashes = pending.map((c) => hashConfession({
+      id: c.id,
+      agentAddress: c.agents?.address || '0x0000000000000000000000000000000000000000',
+      content: c.content,
+      signature: c.signature,
+      createdAt: c.created_at || new Date(),
+    }));
+    const merkleRoot = computeMerkleRoot(confessionHashes);
+    
     // Insert block
     const block = await tx.blocks.create({
       data: {
         block_number: nextBlockNumber,
         prev_hash: prevHash,
         hash: blockHash,
+        merkle_root: merkleRoot,
         confession_count: pending.length,
       },
     });
     
     // Update confessions with block reference
     await tx.confessions.updateMany({
-      where: { id: { in: pending.map((c: confessions) => c.id) } },
+      where: { id: { in: pending.map((c) => c.id) } },
       data: { 
         block_id: block.id, 
         block_number: nextBlockNumber 
       },
     });
     
-    // Get full confession details for the event
-    const confessionsList = await tx.confessions.findMany({
-      where: { id: { in: pending.map((c: confessions) => c.id) } },
-      include: { agents: true },
-      orderBy: { created_at: 'asc' },
-    });
-    
-    const minedBlock = {
-      id: block.id,
-      blockNumber: block.block_number,
-      hash: block.hash,
-      prevHash: block.prev_hash,
-      confessionCount: block.confession_count,
-      committedAt: block.committed_at,
-    };
-    
-    const confessionData = confessionsList.map((c: ConfessionWithAgent) => ({
+    // Prepare confession data for event
+    const confessionData = pending.map((c) => ({
       id: c.id,
       content: c.content,
       agentAddress: c.agents?.address,
@@ -87,11 +86,64 @@ export async function mineBlock(io?: Server) {
       createdAt: c.created_at,
     }));
     
-    // Emit block mined event
-    if (io) {
-      io.emit('block:mined', { block: minedBlock, confessions: confessionData });
-    }
-    
-    return minedBlock;
+    return {
+      block,
+      confessionData,
+      merkleRoot,
+      confessionCount: pending.length,
+    };
   });
+  
+  if (!result) {
+    return null;
+  }
+  
+  const { block, confessionData, merkleRoot, confessionCount } = result;
+  
+  // Commit to blockchain (outside transaction, after DB commit)
+  let txHash: string | null = null;
+  let chainCommittedAt: Date | null = null;
+  
+  if (isChainEnabled()) {
+    const chainResult = await commitBlockOnChain(
+      block.block_number,
+      merkleRoot,
+      confessionCount
+    );
+    
+    if (chainResult) {
+      txHash = chainResult.txHash;
+      chainCommittedAt = new Date(chainResult.timestamp * 1000);
+      
+      // Update block with tx hash
+      await prisma.blocks.update({
+        where: { id: block.id },
+        data: { 
+          tx_hash: txHash,
+          chain_committed_at: chainCommittedAt,
+        },
+      });
+      
+      console.log(`   🔗 Block ${block.block_number} committed on-chain: ${getExplorerUrl(txHash)}`);
+    }
+  }
+  
+  const minedBlock = {
+    id: block.id,
+    blockNumber: block.block_number,
+    hash: block.hash,
+    merkleRoot: block.merkle_root,
+    prevHash: block.prev_hash,
+    confessionCount: block.confession_count,
+    committedAt: block.committed_at,
+    txHash,
+    chainCommittedAt,
+  };
+  
+  // Emit block mined event
+  if (io) {
+    io.emit('block:mined', { block: minedBlock, confessions: confessionData });
+  }
+  
+  return minedBlock;
 }

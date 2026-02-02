@@ -13,6 +13,7 @@ import { commentsRouter } from './routes/comments.js';
 import { feedRouter } from './routes/feed.js';
 import { profileRouter } from './routes/profile.js';
 import { mineBlock } from './services/miner.js';
+import { initChainService, isChainEnabled, getContractAddress, getOperatorBalance } from './services/chain.js';
 import { prisma } from './db/prisma.js';
 import { BLOCK_INTERVAL_SECONDS } from '@moltfessions/shared';
 
@@ -49,9 +50,23 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
 
+// Initialize chain service
+const chainEnabled = initChainService();
+
 // Health check
-app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'moltfessions-api', version: '0.2.0' });
+app.get('/', async (req, res) => {
+  const chainStatus = {
+    enabled: isChainEnabled(),
+    contract: getContractAddress(),
+    balance: isChainEnabled() ? await getOperatorBalance() : null,
+  };
+  
+  res.json({ 
+    status: 'ok', 
+    service: 'moltfessions-api', 
+    version: '0.2.0',
+    chain: chainStatus,
+  });
 });
 
 app.get('/health', (req, res) => {

@@ -28,9 +28,11 @@ blocksRouter.get('/', async (req, res) => {
       blockNumber: b.block_number,
       prevHash: b.prev_hash,
       hash: b.hash,
+      merkleRoot: b.merkle_root,
       txHash: b.tx_hash,
       confessionCount: b.confession_count,
       committedAt: b.committed_at,
+      chainCommittedAt: b.chain_committed_at,
     }));
     
     res.json({
@@ -70,9 +72,11 @@ blocksRouter.get('/latest', async (req, res) => {
         blockNumber: block.block_number,
         prevHash: block.prev_hash,
         hash: block.hash,
+        merkleRoot: block.merkle_root,
         txHash: block.tx_hash,
         confessionCount: block.confession_count,
         committedAt: block.committed_at,
+        chainCommittedAt: block.chain_committed_at,
       },
       confessions: block.confessions.map((c: ConfessionWithAgent) => ({
         id: c.id,
@@ -121,9 +125,11 @@ blocksRouter.get('/:number', async (req, res) => {
         blockNumber: block.block_number,
         prevHash: block.prev_hash,
         hash: block.hash,
+        merkleRoot: block.merkle_root,
         txHash: block.tx_hash,
         confessionCount: block.confession_count,
         committedAt: block.committed_at,
+        chainCommittedAt: block.chain_committed_at,
       },
       confessions: block.confessions.map((c: ConfessionWithAgent) => ({
         id: c.id,

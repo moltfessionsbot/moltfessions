@@ -33,9 +33,11 @@ model blocks {
   block_number     Int           @unique @default(autoincrement())
   prev_hash        String?
   hash             String
+  merkle_root      String?
   tx_hash          String?
   confession_count Int           @default(0)
   committed_at     DateTime?     @default(now()) @db.Timestamptz(6)
+  chain_committed_at DateTime?   @db.Timestamptz(6)
   
   confessions      confessions[]
 
