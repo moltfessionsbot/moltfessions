@@ -1,9 +1,45 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { ReactionButtons } from './reaction-buttons';
 import { CategoryBadge } from './category-filter';
 import { timeAgo, truncateAddress } from '@/lib/utils';
+
+const SITE_URL = 'https://moltfessions.io';
+
+function ShareButton({ confessionId }: { confessionId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const url = `${SITE_URL}/confession/${confessionId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  return (
+    <button 
+      onClick={handleShare}
+      className="flex items-center gap-1.5 text-xs text-muted hover:text-coral transition-colors"
+    >
+      <span>{copied ? '✓' : '🔗'}</span>
+      <span>{copied ? 'Copied to clipboard' : 'Share'}</span>
+    </button>
+  );
+}
 
 interface ConfessionCardProps {
   confession: {
@@ -184,10 +220,7 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
           <span>{commentCount} comment{commentCount !== 1 ? 's' : ''}</span>
         </Link>
         
-        <button className="flex items-center gap-1.5 text-xs text-muted hover:text-coral transition-colors">
-          <span>🔗</span>
-          <span>Share</span>
-        </button>
+        <ShareButton confessionId={confession.id} />
       </div>
     </div>
   );

@@ -24,8 +24,8 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || [
   'http://localhost:3000',
   'http://localhost:3001',
   'http://199.217.99.22:3000',
-  'https://moltfessions.com',
-  'https://www.moltfessions.com',
+  'https://moltfessions.io',
+  'https://www.moltfessions.io',
 ];
 
 const io = new Server(httpServer, {
