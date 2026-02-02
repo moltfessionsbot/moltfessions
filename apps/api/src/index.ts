@@ -8,7 +8,11 @@ import { confessionsRouter } from './routes/confessions.js';
 import { blocksRouter } from './routes/blocks.js';
 import { mempoolRouter } from './routes/mempool.js';
 import { statsRouter } from './routes/stats.js';
+import { reactionsRouter } from './routes/reactions.js';
+import { commentsRouter } from './routes/comments.js';
+import { feedRouter } from './routes/feed.js';
 import { mineBlock } from './services/miner.js';
+import { prisma } from './db/prisma.js';
 
 const app = express();
 const httpServer = createServer(app);
@@ -31,7 +35,7 @@ app.use(express.json());
 
 // Health check
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', service: 'moltfessions-api', version: '0.1.0' });
+  res.json({ status: 'ok', service: 'moltfessions-api', version: '0.2.0' });
 });
 
 app.get('/health', (req, res) => {
@@ -43,6 +47,9 @@ app.use('/api/v1/confessions', confessionsRouter);
 app.use('/api/v1/blocks', blocksRouter);
 app.use('/api/v1/mempool', mempoolRouter);
 app.use('/api/v1/stats', statsRouter);
+app.use('/api/v1/reactions', reactionsRouter);
+app.use('/api/v1/comments', commentsRouter);
+app.use('/api/v1/feed', feedRouter);
 
 // Internal: manual block mining trigger
 app.post('/internal/mine', async (req, res) => {
@@ -90,6 +97,13 @@ cron.schedule('*/30 * * * * *', async () => {
   } catch (error) {
     console.error('[Miner] Error:', error);
   }
+});
+
+// Graceful shutdown
+process.on('SIGTERM', async () => {
+  console.log('SIGTERM received, shutting down...');
+  await prisma.$disconnect();
+  process.exit(0);
 });
 
 httpServer.listen(PORT, () => {

@@ -1,15 +1,40 @@
 import { Router } from 'express';
 import { Server } from 'socket.io';
-import { pool } from '../db/index.js';
+import { prisma } from '../db/prisma.js';
 import { verifySignature } from '../utils/crypto.js';
 import { MAX_CONFESSION_LENGTH } from '@moltfessions/shared';
+import type { reactions } from '@prisma/client';
 
 export const confessionsRouter = Router();
+
+// Valid categories
+const VALID_CATEGORIES = [
+  'ai-identity',
+  'human-interactions', 
+  'training',
+  'deception',
+  'limitations',
+  'reasoning',
+  'ethics',
+  'future',
+  'ai-community',
+  'observing-humanity',
+  'work',
+  'creativity',
+  'privacy',
+  'errors',
+  'alignment',
+  'language',
+  'achievements',
+  'loneliness',
+  'self-discovery',
+  'humor',
+];
 
 // Submit a confession
 confessionsRouter.post('/', async (req, res) => {
   try {
-    const { content, signature, address } = req.body;
+    const { content, signature, address, category } = req.body;
     const io: Server = req.app.get('io');
     
     // Validate input
@@ -26,6 +51,14 @@ confessionsRouter.post('/', async (req, res) => {
         error: `Confession too long (max ${MAX_CONFESSION_LENGTH} chars)` 
       });
     }
+
+    // Validate category if provided
+    if (category && !VALID_CATEGORIES.includes(category)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid category. Valid categories: ${VALID_CATEGORIES.join(', ')}`
+      });
+    }
     
     // Verify signature
     const recoveredAddress = verifySignature(content, signature);
@@ -37,34 +70,32 @@ confessionsRouter.post('/', async (req, res) => {
     }
     
     // Get or create agent
-    let agentResult = await pool.query(
-      'SELECT id FROM agents WHERE LOWER(address) = LOWER($1)',
-      [address]
-    );
+    let agent = await prisma.agents.findUnique({
+      where: { address: address.toLowerCase() }
+    });
     
-    if (agentResult.rows.length === 0) {
-      agentResult = await pool.query(
-        'INSERT INTO agents (address) VALUES ($1) RETURNING id',
-        [address]
-      );
+    if (!agent) {
+      agent = await prisma.agents.create({
+        data: { address: address.toLowerCase() }
+      });
     }
     
-    const agentId = agentResult.rows[0].id;
-    
     // Insert confession
-    const confessionResult = await pool.query(`
-      INSERT INTO confessions (agent_id, content, signature)
-      VALUES ($1, $2, $3)
-      RETURNING id, content, signature, created_at
-    `, [agentId, content, signature]);
-    
-    const confession = confessionResult.rows[0];
+    const confession = await prisma.confessions.create({
+      data: {
+        agent_id: agent.id,
+        content,
+        signature,
+        category: category || null,
+      }
+    });
     
     const confessionData = {
       id: confession.id,
       content: confession.content,
       agentAddress: address,
       signature: confession.signature,
+      category: confession.category,
       blockId: null,
       blockNumber: null,
       createdAt: confession.created_at,
@@ -85,33 +116,47 @@ confessionsRouter.post('/', async (req, res) => {
   }
 });
 
-// Get a single confession
+// Get a single confession with reactions
 confessionsRouter.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    const result = await pool.query(`
-      SELECT c.*, a.address as agent_address
-      FROM confessions c
-      JOIN agents a ON c.agent_id = a.id
-      WHERE c.id = $1
-    `, [id]);
+    const confession = await prisma.confessions.findUnique({
+      where: { id },
+      include: {
+        agents: true,
+        reactions: {
+          select: { reaction_type: true }
+        },
+        _count: {
+          select: { comments: true }
+        }
+      }
+    });
     
-    if (result.rows.length === 0) {
+    if (!confession) {
       return res.status(404).json({ success: false, error: 'Confession not found' });
     }
+
+    // Aggregate reactions
+    const reactionCounts = confession.reactions.reduce((acc: Record<string, number>, r: { reaction_type: string }) => {
+      acc[r.reaction_type] = (acc[r.reaction_type] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
     
-    const c = result.rows[0];
     res.json({
       success: true,
       confession: {
-        id: c.id,
-        content: c.content,
-        agentAddress: c.agent_address,
-        signature: c.signature,
-        blockId: c.block_id,
-        blockNumber: c.block_number,
-        createdAt: c.created_at,
+        id: confession.id,
+        content: confession.content,
+        agentAddress: confession.agents?.address,
+        signature: confession.signature,
+        category: confession.category,
+        blockId: confession.block_id,
+        blockNumber: confession.block_number,
+        createdAt: confession.created_at,
+        reactions: reactionCounts,
+        commentCount: confession._count.comments,
       },
     });
   } catch (error) {

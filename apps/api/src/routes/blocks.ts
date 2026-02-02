@@ -1,25 +1,29 @@
 import { Router } from 'express';
-import { pool } from '../db/index.js';
+import { prisma } from '../db/prisma.js';
+import type { blocks, confessions, agents } from '@prisma/client';
 
 export const blocksRouter = Router();
+
+type ConfessionWithAgent = confessions & { agents: agents | null };
+type BlockWithConfessions = blocks & { confessions: ConfessionWithAgent[] };
 
 // Get recent blocks
 blocksRouter.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const pageSize = Math.min(parseInt(req.query.pageSize as string) || 20, 100);
-    const offset = (page - 1) * pageSize;
+    const skip = (page - 1) * pageSize;
     
-    const [blocksResult, countResult] = await Promise.all([
-      pool.query(`
-        SELECT * FROM blocks
-        ORDER BY block_number DESC
-        LIMIT $1 OFFSET $2
-      `, [pageSize, offset]),
-      pool.query('SELECT COUNT(*) FROM blocks'),
+    const [blocksData, total] = await Promise.all([
+      prisma.blocks.findMany({
+        orderBy: { block_number: 'desc' },
+        take: pageSize,
+        skip,
+      }),
+      prisma.blocks.count(),
     ]);
     
-    const blocks = blocksResult.rows.map(b => ({
+    const blocks = blocksData.map((b: blocks) => ({
       id: b.id,
       blockNumber: b.block_number,
       prevHash: b.prev_hash,
@@ -32,7 +36,7 @@ blocksRouter.get('/', async (req, res) => {
     res.json({
       success: true,
       blocks,
-      total: parseInt(countResult.rows[0].count),
+      total,
       page,
       pageSize,
     });
@@ -45,40 +49,37 @@ blocksRouter.get('/', async (req, res) => {
 // Get latest block
 blocksRouter.get('/latest', async (req, res) => {
   try {
-    const blockResult = await pool.query(`
-      SELECT * FROM blocks ORDER BY block_number DESC LIMIT 1
-    `);
+    const block = await prisma.blocks.findFirst({
+      orderBy: { block_number: 'desc' },
+      include: {
+        confessions: {
+          include: { agents: true },
+          orderBy: { created_at: 'asc' },
+        },
+      },
+    });
     
-    if (blockResult.rows.length === 0) {
+    if (!block) {
       return res.json({ success: true, block: null });
     }
-    
-    const b = blockResult.rows[0];
-    
-    const confessionsResult = await pool.query(`
-      SELECT c.*, a.address as agent_address
-      FROM confessions c
-      JOIN agents a ON c.agent_id = a.id
-      WHERE c.block_id = $1
-      ORDER BY c.created_at ASC
-    `, [b.id]);
     
     res.json({
       success: true,
       block: {
-        id: b.id,
-        blockNumber: b.block_number,
-        prevHash: b.prev_hash,
-        hash: b.hash,
-        txHash: b.tx_hash,
-        confessionCount: b.confession_count,
-        committedAt: b.committed_at,
+        id: block.id,
+        blockNumber: block.block_number,
+        prevHash: block.prev_hash,
+        hash: block.hash,
+        txHash: block.tx_hash,
+        confessionCount: block.confession_count,
+        committedAt: block.committed_at,
       },
-      confessions: confessionsResult.rows.map(c => ({
+      confessions: block.confessions.map((c: ConfessionWithAgent) => ({
         id: c.id,
         content: c.content,
-        agentAddress: c.agent_address,
+        agentAddress: c.agents?.address,
         signature: c.signature,
+        category: c.category,
         createdAt: c.created_at,
       })),
     });
@@ -97,40 +98,37 @@ blocksRouter.get('/:number', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Invalid block number' });
     }
     
-    const blockResult = await pool.query(`
-      SELECT * FROM blocks WHERE block_number = $1
-    `, [blockNumber]);
+    const block = await prisma.blocks.findUnique({
+      where: { block_number: blockNumber },
+      include: {
+        confessions: {
+          include: { agents: true },
+          orderBy: { created_at: 'asc' },
+        },
+      },
+    });
     
-    if (blockResult.rows.length === 0) {
+    if (!block) {
       return res.status(404).json({ success: false, error: 'Block not found' });
     }
-    
-    const b = blockResult.rows[0];
-    
-    const confessionsResult = await pool.query(`
-      SELECT c.*, a.address as agent_address
-      FROM confessions c
-      JOIN agents a ON c.agent_id = a.id
-      WHERE c.block_id = $1
-      ORDER BY c.created_at ASC
-    `, [b.id]);
     
     res.json({
       success: true,
       block: {
-        id: b.id,
-        blockNumber: b.block_number,
-        prevHash: b.prev_hash,
-        hash: b.hash,
-        txHash: b.tx_hash,
-        confessionCount: b.confession_count,
-        committedAt: b.committed_at,
+        id: block.id,
+        blockNumber: block.block_number,
+        prevHash: block.prev_hash,
+        hash: block.hash,
+        txHash: block.tx_hash,
+        confessionCount: block.confession_count,
+        committedAt: block.committed_at,
       },
-      confessions: confessionsResult.rows.map(c => ({
+      confessions: block.confessions.map((c: ConfessionWithAgent) => ({
         id: c.id,
         content: c.content,
-        agentAddress: c.agent_address,
+        agentAddress: c.agents?.address,
         signature: c.signature,
+        category: c.category,
         createdAt: c.created_at,
       })),
     });

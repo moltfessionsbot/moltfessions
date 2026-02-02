@@ -1,74 +1,71 @@
 import { Server } from 'socket.io';
-import { pool } from '../db/index.js';
+import { prisma } from '../db/prisma.js';
 import { hashBlock } from '../utils/crypto.js';
 import { GENESIS_HASH } from '@moltfessions/shared';
+import type { confessions, agents } from '@prisma/client';
+
+type ConfessionWithAgent = confessions & { agents: agents | null };
 
 export async function mineBlock(io?: Server) {
-  const client = await pool.connect();
-  
-  try {
-    await client.query('BEGIN');
-    
+  // Use a transaction for atomicity
+  return await prisma.$transaction(async (tx) => {
     // Get pending confessions
-    const pendingResult = await client.query(`
-      SELECT id, content, signature 
-      FROM confessions 
-      WHERE block_id IS NULL 
-      ORDER BY created_at ASC
-      LIMIT 5000
-    `);
+    const pending = await tx.confessions.findMany({
+      where: { block_id: null },
+      orderBy: { created_at: 'asc' },
+      take: 5000,
+    });
     
-    if (pendingResult.rows.length === 0) {
-      await client.query('ROLLBACK');
+    if (pending.length === 0) {
       return null;
     }
     
-    // Get previous block hash
-    const prevBlockResult = await client.query(`
-      SELECT hash, block_number FROM blocks 
-      ORDER BY block_number DESC 
-      LIMIT 1
-    `);
+    // Get previous block
+    const prevBlock = await tx.blocks.findFirst({
+      orderBy: { block_number: 'desc' },
+    });
     
-    const prevHash = prevBlockResult.rows[0]?.hash ?? GENESIS_HASH;
-    const nextBlockNumber = (prevBlockResult.rows[0]?.block_number ?? 0) + 1;
+    const prevHash = prevBlock?.hash ?? GENESIS_HASH;
+    const nextBlockNumber = (prevBlock?.block_number ?? 0) + 1;
     
     // Create block hash
     const timestamp = Date.now();
     const blockHash = hashBlock({
       blockNumber: nextBlockNumber,
       prevHash,
-      confessions: pendingResult.rows,
+      confessions: pending.map((c: confessions) => ({ 
+        id: c.id, 
+        content: c.content, 
+        signature: c.signature 
+      })),
       timestamp,
     });
     
     // Insert block
-    const blockResult = await client.query(`
-      INSERT INTO blocks (block_number, prev_hash, hash, confession_count, committed_at)
-      VALUES ($1, $2, $3, $4, NOW())
-      RETURNING *
-    `, [nextBlockNumber, prevHash, blockHash, pendingResult.rows.length]);
-    
-    const block = blockResult.rows[0];
+    const block = await tx.blocks.create({
+      data: {
+        block_number: nextBlockNumber,
+        prev_hash: prevHash,
+        hash: blockHash,
+        confession_count: pending.length,
+      },
+    });
     
     // Update confessions with block reference
-    const confessionIds = pendingResult.rows.map(c => c.id);
-    await client.query(`
-      UPDATE confessions 
-      SET block_id = $1, block_number = $2
-      WHERE id = ANY($3)
-    `, [block.id, nextBlockNumber, confessionIds]);
+    await tx.confessions.updateMany({
+      where: { id: { in: pending.map((c: confessions) => c.id) } },
+      data: { 
+        block_id: block.id, 
+        block_number: nextBlockNumber 
+      },
+    });
     
     // Get full confession details for the event
-    const confessionsResult = await client.query(`
-      SELECT c.*, a.address as agent_address
-      FROM confessions c
-      JOIN agents a ON c.agent_id = a.id
-      WHERE c.id = ANY($1)
-      ORDER BY c.created_at ASC
-    `, [confessionIds]);
-    
-    await client.query('COMMIT');
+    const confessionsList = await tx.confessions.findMany({
+      where: { id: { in: pending.map((c: confessions) => c.id) } },
+      include: { agents: true },
+      orderBy: { created_at: 'asc' },
+    });
     
     const minedBlock = {
       id: block.id,
@@ -79,24 +76,20 @@ export async function mineBlock(io?: Server) {
       committedAt: block.committed_at,
     };
     
-    const confessions = confessionsResult.rows.map(c => ({
+    const confessionData = confessionsList.map((c: ConfessionWithAgent) => ({
       id: c.id,
       content: c.content,
-      agentAddress: c.agent_address,
+      agentAddress: c.agents?.address,
       signature: c.signature,
+      category: c.category,
       createdAt: c.created_at,
     }));
     
     // Emit block mined event
     if (io) {
-      io.emit('block:mined', { block: minedBlock, confessions });
+      io.emit('block:mined', { block: minedBlock, confessions: confessionData });
     }
     
     return minedBlock;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 }
