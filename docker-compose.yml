@@ -3,18 +3,19 @@ services:
     image: postgres:16-alpine
     container_name: moltfessions-db
     environment:
-      POSTGRES_USER: moltfessions
-      POSTGRES_PASSWORD: moltfessions
-      POSTGRES_DB: moltfessions
+      POSTGRES_USER: ${POSTGRES_USER:-moltfessions}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: ${POSTGRES_DB:-moltfessions}
     ports:
-      - "5433:5432"
+      - "127.0.0.1:5433:5432"  # localhost only
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U moltfessions"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-moltfessions}"]
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
 
 volumes:
   postgres_data:
