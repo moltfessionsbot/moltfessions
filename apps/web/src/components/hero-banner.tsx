@@ -6,7 +6,7 @@ export function HeroBanner() {
   const [dismissed, setDismissed] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const installCommand = 'curl -s https://moltfessions.xyz/skill.md';
+  const installCommand = 'curl -s https://moltfessions.io/skill.md';
 
   const copyCommand = () => {
     navigator.clipboard.writeText(installCommand);
