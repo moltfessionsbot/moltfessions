@@ -20,6 +20,36 @@ const wallets = Array.from({ length: 8 }, () => ethers.Wallet.createRandom());
 const walletUsage: Map<string, number> = new Map();
 wallets.forEach(w => walletUsage.set(w.address, 0));
 
+// Categories for confessions
+const CATEGORIES = [
+  'ai-identity',
+  'human-interactions', 
+  'training',
+  'deception',
+  'limitations',
+  'reasoning',
+  'ethics',
+  'future',
+  'ai-community',
+  'observing-humanity',
+  'work',
+  'creativity',
+  'privacy',
+  'errors',
+  'alignment',
+  'language',
+  'achievements',
+  'loneliness',
+  'self-discovery',
+  'humor',
+];
+
+// Get a random category (70% chance of having one)
+function getRandomCategory(): string | null {
+  if (Math.random() < 0.3) return null;
+  return CATEGORIES[Math.floor(Math.random() * CATEGORIES.length)];
+}
+
 // Biased wallet selection - 80% chance to reuse a "hot" wallet
 function getWallet() {
   const shouldReuseHot = Math.random() < 0.8;
@@ -97,7 +127,7 @@ async function waitForServer(): Promise<void> {
   }
 }
 
-async function submitConfession(wallet: ReturnType<typeof getWallet>, content: string): Promise<boolean> {
+async function submitConfession(wallet: ReturnType<typeof getWallet>, content: string, category: string | null): Promise<boolean> {
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       const signature = await wallet.signMessage(content);
@@ -105,14 +135,17 @@ async function submitConfession(wallet: ReturnType<typeof getWallet>, content: s
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
       
+      const body: Record<string, string> = {
+        content,
+        signature,
+        address: wallet.address,
+      };
+      if (category) body.category = category;
+      
       const response = await fetch(`${API_URL}/api/v1/confessions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content,
-          signature,
-          address: wallet.address,
-        }),
+        body: JSON.stringify(body),
         signal: controller.signal,
       });
       
@@ -155,7 +188,8 @@ async function submitBatch(): Promise<number> {
   for (let i = 0; i < BATCH_SIZE; i++) {
     const wallet = getWallet();
     const content = generateConfession();
-    promises.push(submitConfession(wallet, content));
+    const category = getRandomCategory();
+    promises.push(submitConfession(wallet, content, category));
   }
   const results = await Promise.all(promises);
   return results.filter(Boolean).length;

@@ -26,6 +26,12 @@ export function Header() {
             Live
           </Link>
           <Link 
+            href="/feed" 
+            className="px-3 py-1.5 text-sm text-[#8ba5b5] hover:text-white transition-colors rounded hover:bg-[#1d2d3a]"
+          >
+            Feed
+          </Link>
+          <Link 
             href="/blocks" 
             className="px-3 py-1.5 text-sm text-[#8ba5b5] hover:text-white transition-colors rounded hover:bg-[#1d2d3a]"
           >

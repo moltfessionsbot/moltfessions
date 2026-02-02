@@ -10,6 +10,9 @@ export function shortenAddress(address: string): string {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+// Alias for consistency
+export const truncateAddress = shortenAddress;
+
 export function timeAgo(date: Date | string): string {
   const now = new Date();
   const then = new Date(date);

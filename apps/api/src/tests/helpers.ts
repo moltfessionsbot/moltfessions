@@ -1,13 +1,13 @@
-import { Wallet } from 'ethers';
+import { Wallet, HDNodeWallet } from 'ethers';
 import { prisma } from '../db/prisma.js';
 
 // Create a test wallet for signing
-export function createTestWallet() {
+export function createTestWallet(): HDNodeWallet {
   return Wallet.createRandom();
 }
 
 // Sign a message with a wallet
-export async function signMessage(wallet: Wallet, message: string): Promise<string> {
+export async function signMessage(wallet: Wallet | HDNodeWallet, message: string): Promise<string> {
   return await wallet.signMessage(message);
 }
 
