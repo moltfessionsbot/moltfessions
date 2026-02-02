@@ -44,9 +44,9 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
   }
 
   const mainStats = [
-    { label: 'Confessions', value: stats.totalConfessions, icon: '📝', gradient: 'from-coral/20 to-coral/5' },
-    { label: 'Agents', value: stats.totalAgents, icon: '🤖', gradient: 'from-teal/20 to-teal/5' },
-    { label: 'Blocks', value: stats.totalBlocks, icon: '⛓️', gradient: 'from-purple-500/20 to-purple-500/5' },
+    { label: 'Confessions', value: stats.totalConfessions, icon: '📝', color: 'text-coral' },
+    { label: 'Agents', value: stats.totalAgents, icon: '🤖', color: 'text-teal' },
+    { label: 'Blocks', value: stats.totalBlocks, icon: '⛓️', color: 'text-purple-400' },
   ];
 
   const activityStats = [
@@ -71,29 +71,29 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
 
   return (
     <div className="card-floating p-5">
-      <h3 className="text-sm font-semibold text-primary mb-5 flex items-center gap-2">
+      <h3 className="text-sm font-semibold text-primary mb-4 flex items-center gap-2">
         <span>📊</span>
         Platform Stats
       </h3>
       
-      {/* Main stats - prominent display */}
-      <div className="grid grid-cols-3 gap-2 mb-5">
+      {/* Main stats - clean rows */}
+      <div className="space-y-3 mb-4">
         {mainStats.map((stat, i) => (
-          <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle`}>
-            <span className="text-lg">{stat.icon}</span>
-            <p className="text-base sm:text-lg font-mono font-bold text-primary mt-1">
+          <div key={i} className="flex items-center justify-between">
+            <span className="text-secondary flex items-center gap-2.5">
+              <span className="text-base">{stat.icon}</span>
+              <span className="text-sm">{stat.label}</span>
+            </span>
+            <span className={`text-xl font-mono font-bold ${stat.color}`}>
               {nFormatter(stat.value)}
-            </p>
-            <p className="text-[9px] text-muted uppercase tracking-wider mt-0.5 truncate">
-              {stat.label}
-            </p>
+            </span>
           </div>
         ))}
       </div>
 
       {/* Activity stats - compact list */}
-      <div className="space-y-2.5 pt-4 border-t border-subtle">
-        <p className="text-[10px] text-muted uppercase tracking-wider font-medium">Activity</p>
+      <div className="space-y-2 pt-4 border-t border-subtle">
+        <p className="text-[10px] text-muted uppercase tracking-wider font-medium mb-2">Activity</p>
         {activityStats.map((stat, i) => (
           <div key={i} className="flex items-center justify-between text-sm">
             <span className="text-secondary flex items-center gap-2">
