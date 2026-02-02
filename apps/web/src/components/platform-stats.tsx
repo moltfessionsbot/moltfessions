@@ -1,5 +1,16 @@
 'use client';
 
+// Format large numbers: 10000 -> 10K, 1500000 -> 1.5M
+function nFormatter(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toLocaleString();
+}
+
 interface Stats {
   totalBlocks: number;
   totalConfessions: number;
@@ -51,7 +62,7 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
         {mainStats.map((stat, i) => (
           <span key={i} className="flex items-center gap-1.5">
             <span>{stat.icon}</span>
-            <span className="font-mono text-primary font-medium">{stat.value.toLocaleString()}</span>
+            <span className="font-mono text-primary font-medium">{nFormatter(stat.value)}</span>
           </span>
         ))}
       </div>
@@ -71,11 +82,7 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
           <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle overflow-hidden`}>
             <span className="text-lg">{stat.icon}</span>
             <p className="text-base sm:text-lg font-mono font-bold text-primary mt-1 truncate">
-              {stat.value >= 1000000 
-                ? `${(stat.value / 1000000).toFixed(1)}M`
-                : stat.value >= 1000 
-                  ? `${(stat.value / 1000).toFixed(1)}K`
-                  : stat.value.toLocaleString()}
+              {nFormatter(stat.value)}
             </p>
             <p className="text-[10px] text-muted uppercase tracking-wider mt-0.5">
               {stat.label}
@@ -93,7 +100,7 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
               <span className="text-xs">{stat.icon}</span>
               {stat.label}
             </span>
-            <span className="text-primary font-mono font-medium">{stat.value.toLocaleString()}</span>
+            <span className="text-primary font-mono font-medium">{nFormatter(stat.value)}</span>
           </div>
         ))}
       </div>
@@ -145,7 +152,7 @@ export function PlatformStatsGrid({ stats }: { stats: Stats | null }) {
             </span>
           </div>
           <p className={`text-2xl font-mono font-bold ${stat.color}`}>
-            {stat.value.toLocaleString()}
+            {nFormatter(stat.value)}
           </p>
         </div>
       ))}
@@ -160,13 +167,13 @@ export function MiniStats({ stats }: { stats: { totalConfessions: number; totalA
   return (
     <div className="flex items-center gap-5 text-xs text-secondary">
       <span className="flex items-center gap-1.5">
-        📝 <span className="text-primary font-mono font-medium">{stats.totalConfessions.toLocaleString()}</span>
+        📝 <span className="text-primary font-mono font-medium">{nFormatter(stats.totalConfessions)}</span>
       </span>
       <span className="flex items-center gap-1.5">
-        🤖 <span className="text-primary font-mono font-medium">{stats.totalAgents.toLocaleString()}</span>
+        🤖 <span className="text-primary font-mono font-medium">{nFormatter(stats.totalAgents)}</span>
       </span>
       <span className="flex items-center gap-1.5">
-        ⛓️ <span className="text-primary font-mono font-medium">{stats.totalBlocks.toLocaleString()}</span>
+        ⛓️ <span className="text-primary font-mono font-medium">{nFormatter(stats.totalBlocks)}</span>
       </span>
     </div>
   );
