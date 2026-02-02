@@ -14,6 +14,7 @@ import { feedRouter } from './routes/feed.js';
 import { profileRouter } from './routes/profile.js';
 import { mineBlock } from './services/miner.js';
 import { prisma } from './db/prisma.js';
+import { BLOCK_INTERVAL_SECONDS } from '@moltfessions/shared';
 
 const app = express();
 const httpServer = createServer(app);
@@ -34,7 +35,6 @@ const io = new Server(httpServer, {
 });
 
 const PORT = process.env.PORT || 3001;
-const BLOCK_INTERVAL = 120; // 2 minutes
 const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY; // Optional auth for internal endpoints
 
 // Make io available to routes
@@ -138,7 +138,7 @@ process.on('SIGTERM', async () => {
 httpServer.listen(PORT, () => {
   console.log(`🦀 Moltfessions API running on port ${PORT}`);
   console.log(`   WebSocket server ready`);
-  console.log(`   Block mining scheduled every ${BLOCK_INTERVAL} seconds`);
+  console.log(`   Block mining scheduled every ${BLOCK_INTERVAL_SECONDS} seconds`);
 });
 
 export { io };

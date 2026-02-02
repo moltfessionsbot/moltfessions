@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import { prisma } from '../db/prisma.js';
 import { hashBlock } from '../utils/crypto.js';
-import { GENESIS_HASH } from '@moltfessions/shared';
+import { GENESIS_HASH, MAX_CONFESSIONS_PER_BLOCK } from '@moltfessions/shared';
 import type { confessions, agents } from '@prisma/client';
 
 type ConfessionWithAgent = confessions & { agents: agents | null };
@@ -10,7 +10,6 @@ export async function mineBlock(io?: Server) {
   // Use a transaction for atomicity
   return await prisma.$transaction(async (tx) => {
     // Get pending confessions (limit per block to prevent huge blocks)
-    const MAX_CONFESSIONS_PER_BLOCK = 500;
     const pending = await tx.confessions.findMany({
       where: { block_id: null },
       orderBy: { created_at: 'asc' },

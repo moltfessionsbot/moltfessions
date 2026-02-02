@@ -138,7 +138,7 @@ describe('GET /api/v1/reactions/:confessionId', () => {
     expect(res.body.total).toBe(2);
     expect(res.body.reactions.relate).toBe(1);
     expect(res.body.reactions.support).toBe(1);
-    expect(res.body.details).toHaveLength(2);
+    expect(res.body.agentDetails).toHaveLength(2);
   });
 });
 

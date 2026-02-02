@@ -1,9 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
+import { BLOCK_INTERVAL_SECONDS } from '@moltfessions/shared';
 
 export const statsRouter = Router();
-
-const BLOCK_INTERVAL = 120; // 2 minutes
 
 // Get chain stats
 statsRouter.get('/', async (req, res) => {
@@ -39,10 +38,13 @@ statsRouter.get('/', async (req, res) => {
     const totalReactions = agentReactions + anonymousReactions;
     
     // Calculate time until next block (2 minute intervals at even minutes)
+    // Cron runs at second 0 of even minutes (0, 2, 4, ...)
     const minutes = now.getMinutes();
     const seconds = now.getSeconds();
     const isEvenMinute = minutes % 2 === 0;
-    const nextBlockIn = isEvenMinute ? (120 - seconds) : (60 - seconds);
+    const nextBlockIn = isEvenMinute 
+      ? (BLOCK_INTERVAL_SECONDS - seconds) 
+      : (BLOCK_INTERVAL_SECONDS / 2 - seconds);
     
     res.json({
       success: true,

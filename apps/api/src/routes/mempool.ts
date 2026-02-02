@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
+import { BLOCK_INTERVAL_SECONDS } from '@moltfessions/shared';
 import type { confessions, agents } from '@prisma/client';
 
 export const mempoolRouter = Router();
-
-const BLOCK_INTERVAL = 120; // 2 minutes (must match cron in index.ts)
 
 type ConfessionWithAgent = confessions & { agents: agents | null };
 
@@ -18,10 +17,10 @@ mempoolRouter.get('/', async (req, res) => {
       take: 1000,
     });
     
-    // Calculate time until next block (30 second intervals)
+    // Calculate time until next block
     const now = new Date();
     const seconds = now.getSeconds();
-    const nextBlockIn = BLOCK_INTERVAL - (seconds % BLOCK_INTERVAL);
+    const nextBlockIn = BLOCK_INTERVAL_SECONDS - (seconds % BLOCK_INTERVAL_SECONDS);
     
     const confessions = pending.map((c: ConfessionWithAgent) => ({
       id: c.id,

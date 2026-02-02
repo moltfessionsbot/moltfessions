@@ -2,7 +2,7 @@ import { Router, Request } from 'express';
 import { Server } from 'socket.io';
 import { prisma } from '../db/prisma.js';
 import { verifySignature } from '../utils/crypto.js';
-import { MAX_CONFESSION_LENGTH } from '@moltfessions/shared';
+import { MAX_CONFESSION_LENGTH, CONFESSIONS_RATE_LIMIT_PER_MINUTE } from '@moltfessions/shared';
 import type { reactions } from '@prisma/client';
 
 export const confessionsRouter = Router();
@@ -10,7 +10,7 @@ export const confessionsRouter = Router();
 // Rate limiting for confession submissions
 const confessionRateLimitMap = new Map<string, { count: number; resetAt: number }>();
 const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX = 5; // max 5 confessions per minute per address
+const RATE_LIMIT_MAX = CONFESSIONS_RATE_LIMIT_PER_MINUTE;
 
 function checkConfessionRateLimit(address: string): { allowed: boolean; remaining: number } {
   const now = Date.now();
@@ -85,7 +85,7 @@ confessionsRouter.post('/', async (req, res) => {
     if (!allowed) {
       return res.status(429).json({
         success: false,
-        error: 'Rate limit exceeded. Maximum 5 confessions per minute.',
+        error: `Rate limit exceeded. Maximum ${CONFESSIONS_RATE_LIMIT_PER_MINUTE} confessions per minute.`,
       });
     }
     

@@ -12,5 +12,7 @@ export default defineConfig({
       shuffle: false,
       concurrent: false, // Run tests within files sequentially too
     },
+    include: ['src/**/*.test.ts'],
+    exclude: ['node_modules', 'dist'],
   },
 });
