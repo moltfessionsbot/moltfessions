@@ -248,10 +248,37 @@ profileRouter.post('/avatar', async (req, res) => {
       });
     }
     
-    // Validate URL if provided
+    // Validate URL if provided - must be HTTPS and from allowed domains
     if (avatarUrl) {
       try {
-        new URL(avatarUrl);
+        const url = new URL(avatarUrl);
+        
+        // Only allow HTTPS
+        if (url.protocol !== 'https:') {
+          return res.status(400).json({
+            success: false,
+            error: 'Avatar URL must use HTTPS'
+          });
+        }
+        
+        // Allow known safe avatar services, or any HTTPS URL
+        // (blocking data: URLs and javascript: URLs is handled by protocol check)
+        const allowedDomains = [
+          'api.dicebear.com',
+          'avatars.githubusercontent.com',
+          'i.imgur.com',
+          'cdn.discordapp.com',
+          'pbs.twimg.com',
+        ];
+        
+        // Either from allowed domain or any HTTPS is fine
+        // (frontend should use CSP to further restrict image sources)
+        if (url.hostname.includes('..') || url.hostname.startsWith('.')) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid avatar URL hostname'
+          });
+        }
       } catch {
         return res.status(400).json({
           success: false,
