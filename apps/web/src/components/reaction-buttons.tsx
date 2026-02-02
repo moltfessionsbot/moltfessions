@@ -161,40 +161,46 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
   const totalReactions = Object.values(localReactions).reduce((a, b) => a + b, 0);
 
   if (compact) {
-    const topReactions = REACTIONS
-      .filter(r => (localReactions[r.type] || 0) > 0)
-      .sort((a, b) => (localReactions[b.type] || 0) - (localReactions[a.type] || 0))
-      .slice(0, 3);
-
     return (
-      <div className="flex items-center gap-2">
-        {topReactions.map(r => (
-          <button 
-            key={r.type}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleReact(r.type);
-            }}
-            disabled={isSubmitting}
-            className={`flex items-center gap-1 text-xs transition-all hover:scale-110 ${
-              recentlyUpdated === r.type ? 'scale-125' : ''
-            } ${myReaction === r.type ? 'opacity-100' : 'opacity-70 hover:opacity-100'}`}
-          >
-            <span>{r.emoji}</span>
-            <span className={`font-mono ${myReaction === r.type ? 'text-teal' : 'text-muted'}`}>
-              {localReactions[r.type]}
-            </span>
-          </button>
-        ))}
-        {topReactions.length === 0 && (
-          <span className="text-xs text-muted">Be the first to react</span>
-        )}
-        {totalReactions > 0 && topReactions.length < Object.keys(localReactions).filter(k => localReactions[k] > 0).length && (
-          <span className="text-xs text-muted">
-            +{totalReactions - topReactions.reduce((a, r) => a + (localReactions[r.type] || 0), 0)}
-          </span>
-        )}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {REACTIONS.map(reaction => {
+          const count = localReactions[reaction.type] || 0;
+          const isSelected = myReaction === reaction.type;
+          const isUpdated = recentlyUpdated === reaction.type;
+          
+          return (
+            <button 
+              key={reaction.type}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleReact(reaction.type);
+              }}
+              disabled={isSubmitting}
+              title={reaction.label}
+              className={`
+                flex items-center gap-1 px-2 py-1 rounded-full text-sm
+                border transition-all duration-150
+                disabled:opacity-50 disabled:cursor-not-allowed
+                hover:scale-105 active:scale-95
+                ${isSelected 
+                  ? 'bg-teal/20 border-teal/50 ring-1 ring-teal/30' 
+                  : count > 0 
+                    ? 'bg-teal/10 border-teal/20 hover:border-teal/40' 
+                    : 'bg-card/50 border-subtle hover:border-border hover:bg-card'
+                }
+                ${isUpdated ? 'scale-110 ring-2 ring-teal/40' : ''}
+              `}
+            >
+              <span className={isUpdated ? 'animate-bounce' : ''}>{reaction.emoji}</span>
+              {count > 0 && (
+                <span className={`text-xs font-mono ${isSelected ? 'text-teal' : 'text-muted'}`}>
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     );
   }
