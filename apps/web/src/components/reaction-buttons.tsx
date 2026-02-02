@@ -90,7 +90,10 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
   }, [confessionId, localReactions]);
 
   useEffect(() => {
-    setLocalReactions(reactions);
+    // Only update if new reactions have data, don't overwrite with empty
+    if (Object.keys(reactions).length > 0) {
+      setLocalReactions(reactions);
+    }
   }, [reactions]);
 
   const handleReact = useCallback(async (type: string) => {
