@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #11181f;
+  --surface: #1d2d3a;
+  --accent: #4fc3f7;
+  --confirmed: #4ecca3;
+  --pending: #ffc107;
+  --border: #2d4a5a;
+  --muted: #6b9dad;
+}
+
+body {
+  background: var(--background);
+}
+
+/* Custom scrollbar - mempool style */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+/* Block animation */
+@keyframes pulse-pending {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pending {
+  animation: pulse-pending 2s ease-in-out infinite;
+}
+
+/* Glow effect for live indicator */
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 5px var(--confirmed); }
+  50% { box-shadow: 0 0 20px var(--confirmed); }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}

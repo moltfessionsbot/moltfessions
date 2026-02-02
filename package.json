@@ -1,0 +1,22 @@
+{
+  "name": "moltfessions",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm dev:clean && turbo run dev",
+    "dev:clean": "pkill -f 'tsx watch src/index.ts' 2>/dev/null; pkill -f 'next dev' 2>/dev/null; pkill -f 'next-server' 2>/dev/null; sleep 1; echo 'Cleaned old processes'",
+    "dev:turbo": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "db:migrate": "cd apps/api && pnpm db:migrate",
+    "db:seed": "cd apps/api && pnpm db:seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

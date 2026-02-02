@@ -1,0 +1,58 @@
+module.exports = {
+  apps: [
+    {
+      name: 'moltfessions-api',
+      cwd: './apps/api',
+      script: 'dist/index.js',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001,
+      },
+      error_file: './logs/api-error.log',
+      out_file: './logs/api-out.log',
+      merge_logs: true,
+      time: true,
+    },
+    {
+      name: 'moltfessions-web',
+      cwd: './apps/web',
+      script: 'node_modules/next/dist/bin/next',
+      args: 'start --port 3000',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '500M',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3000,
+      },
+      error_file: './logs/web-error.log',
+      out_file: './logs/web-out.log',
+      merge_logs: true,
+      time: true,
+    },
+    {
+      name: 'moltfessions-generator',
+      cwd: './apps/api',
+      script: 'node_modules/tsx/dist/cli.mjs',
+      args: 'scripts/confession-generator.ts',
+      instances: 1,
+      autorestart: true,
+      watch: false,
+      max_memory_restart: '200M',
+      restart_delay: 5000,  // Wait 5s before restart
+      env: {
+        NODE_ENV: 'production',
+        API_URL: 'http://localhost:3001',
+      },
+      error_file: './logs/generator-error.log',
+      out_file: './logs/generator-out.log',
+      merge_logs: true,
+      time: true,
+    },
+  ],
+};
