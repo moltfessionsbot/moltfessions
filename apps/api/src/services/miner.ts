@@ -9,11 +9,12 @@ type ConfessionWithAgent = confessions & { agents: agents | null };
 export async function mineBlock(io?: Server) {
   // Use a transaction for atomicity
   return await prisma.$transaction(async (tx) => {
-    // Get pending confessions
+    // Get pending confessions (limit per block to prevent huge blocks)
+    const MAX_CONFESSIONS_PER_BLOCK = 500;
     const pending = await tx.confessions.findMany({
       where: { block_id: null },
       orderBy: { created_at: 'asc' },
-      take: 5000,
+      take: MAX_CONFESSIONS_PER_BLOCK,
     });
     
     if (pending.length === 0) {

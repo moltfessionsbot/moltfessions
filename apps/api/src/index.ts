@@ -17,22 +17,36 @@ import { prisma } from './db/prisma.js';
 
 const app = express();
 const httpServer = createServer(app);
+
+// CORS configuration - restrict in production
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'https://moltfessions.com',
+  'https://www.moltfessions.com',
+];
+
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
+    origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST'],
   },
 });
 
 const PORT = process.env.PORT || 3001;
 const BLOCK_INTERVAL = 120; // 2 minutes
+const INTERNAL_API_KEY = process.env.INTERNAL_API_KEY; // Optional auth for internal endpoints
 
 // Make io available to routes
 app.set('io', io);
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(cors({
+  origin: ALLOWED_ORIGINS,
+  methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+}));
+app.use(express.json({ limit: '10kb' })); // Limit body size to prevent DoS
 
 // Health check
 app.get('/', (req, res) => {
@@ -53,8 +67,16 @@ app.use('/api/v1/comments', commentsRouter);
 app.use('/api/v1/feed', feedRouter);
 app.use('/api/v1/profile', profileRouter);
 
-// Internal: manual block mining trigger
+// Internal: manual block mining trigger (requires API key if configured)
 app.post('/internal/mine', async (req, res) => {
+  // Check API key if configured
+  if (INTERNAL_API_KEY) {
+    const providedKey = req.headers['x-api-key'] || req.query.key;
+    if (providedKey !== INTERNAL_API_KEY) {
+      return res.status(401).json({ success: false, error: 'Unauthorized' });
+    }
+  }
+  
   try {
     const block = await mineBlock(io);
     if (block) {

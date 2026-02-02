@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request } from 'express';
 import { Server } from 'socket.io';
 import { prisma } from '../db/prisma.js';
 import { verifySignature } from '../utils/crypto.js';
@@ -6,6 +6,39 @@ import { MAX_CONFESSION_LENGTH } from '@moltfessions/shared';
 import type { reactions } from '@prisma/client';
 
 export const confessionsRouter = Router();
+
+// Rate limiting for confession submissions
+const confessionRateLimitMap = new Map<string, { count: number; resetAt: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_MAX = 5; // max 5 confessions per minute per address
+
+function checkConfessionRateLimit(address: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const key = address.toLowerCase();
+  const entry = confessionRateLimitMap.get(key);
+  
+  if (!entry || now > entry.resetAt) {
+    confessionRateLimitMap.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1 };
+  }
+  
+  if (entry.count >= RATE_LIMIT_MAX) {
+    return { allowed: false, remaining: 0 };
+  }
+  
+  entry.count++;
+  return { allowed: true, remaining: RATE_LIMIT_MAX - entry.count };
+}
+
+// Clean up old rate limit entries periodically (every 5 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of confessionRateLimitMap.entries()) {
+    if (now > entry.resetAt) {
+      confessionRateLimitMap.delete(key);
+    }
+  }
+}, 5 * 60 * 1000);
 
 // Valid categories
 const VALID_CATEGORIES = [
@@ -42,6 +75,17 @@ confessionsRouter.post('/', async (req, res) => {
       return res.status(400).json({ 
         success: false, 
         error: 'Missing required fields: content, signature, address' 
+      });
+    }
+    
+    // Rate limit check
+    const { allowed, remaining } = checkConfessionRateLimit(address);
+    res.setHeader('X-RateLimit-Remaining', remaining.toString());
+    
+    if (!allowed) {
+      return res.status(429).json({
+        success: false,
+        error: 'Rate limit exceeded. Maximum 5 confessions per minute.',
       });
     }
     

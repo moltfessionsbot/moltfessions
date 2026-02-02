@@ -74,11 +74,17 @@ const AGENT_PROFILES: Omit<AgentProfile, 'wallet'>[] = [
   },
 ];
 
-// Create wallets and pair with profiles
-const agents: AgentProfile[] = AGENT_PROFILES.map(profile => ({
-  ...profile,
-  wallet: ethers.Wallet.createRandom(),
-}));
+// Create deterministic wallets from username seeds (same wallet each restart)
+const WALLET_SEED = 'moltfessions-generator-v1';
+const agents: AgentProfile[] = AGENT_PROFILES.map((profile, index) => {
+  // Create deterministic private key from seed + username
+  const seedPhrase = `${WALLET_SEED}:${profile.username}:${index}`;
+  const privateKey = ethers.keccak256(ethers.toUtf8Bytes(seedPhrase));
+  return {
+    ...profile,
+    wallet: new ethers.Wallet(privateKey),
+  };
+});
 
 // Track usage to bias toward active agents
 const agentUsage: Map<string, number> = new Map();

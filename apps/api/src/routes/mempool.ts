@@ -4,7 +4,7 @@ import type { confessions, agents } from '@prisma/client';
 
 export const mempoolRouter = Router();
 
-const BLOCK_INTERVAL = 30; // seconds
+const BLOCK_INTERVAL = 120; // 2 minutes (must match cron in index.ts)
 
 type ConfessionWithAgent = confessions & { agents: agents | null };
 

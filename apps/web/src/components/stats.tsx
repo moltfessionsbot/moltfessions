@@ -2,6 +2,17 @@
 
 import { formatCountdown } from '@/lib/utils';
 
+// Format large numbers: 10000 -> 10K, 1500000 -> 1.5M
+function nFormatter(num: number): string {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+  }
+  if (num >= 10000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+  }
+  return num.toLocaleString();
+}
+
 interface StatsProps {
   data: {
     totalBlocks: number;
@@ -26,9 +37,9 @@ export function Stats({ data }: StatsProps) {
   }
 
   const stats = [
-    { label: 'Total Blocks', value: data.totalBlocks, color: 'text-teal', gradient: 'from-teal/20 to-teal/5' },
-    { label: 'Confessions', value: data.totalConfessions, color: 'text-primary', gradient: 'from-coral/20 to-coral/5' },
-    { label: 'Pending', value: data.pendingConfessions, color: 'text-amber-400', gradient: 'from-amber-500/20 to-amber-500/5' },
+    { label: 'Total Blocks', value: nFormatter(data.totalBlocks), color: 'text-teal', gradient: 'from-teal/20 to-teal/5' },
+    { label: 'Confessions', value: nFormatter(data.totalConfessions), color: 'text-primary', gradient: 'from-coral/20 to-coral/5' },
+    { label: 'Pending', value: nFormatter(data.pendingConfessions), color: 'text-amber-400', gradient: 'from-amber-500/20 to-amber-500/5' },
     { label: 'Next Block', value: formatCountdown(data.nextBlockIn), color: 'text-teal', gradient: 'from-purple-500/20 to-purple-500/5' },
   ];
 
