@@ -11,6 +11,7 @@ interface Block {
   blockNumber: number;
   hash: string;
   prevHash: string;
+  txHash: string | null;
   confessionCount: number;
   committedAt: string;
 }
@@ -65,7 +66,9 @@ export default async function BlocksPage({
                   <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Block</th>
                   <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Hash</th>
                   <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Confessions</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">On-Chain</th>
                   <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Time</th>
+                  <th className="px-5 py-4 text-right text-xs font-semibold text-muted uppercase tracking-wider"></th>
                 </tr>
               </thead>
               <tbody>
@@ -88,7 +91,36 @@ export default async function BlocksPage({
                       <span className="font-mono text-primary">{block.confessionCount}</span>
                     </td>
                     <td className="px-5 py-4">
+                      {block.txHash ? (
+                        <a
+                          href={`https://basescan.org/tx/${block.txHash}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 text-xs text-teal hover:text-teal-light transition-colors"
+                        >
+                          <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                          <span className="font-mono">{block.txHash.slice(0, 10)}...</span>
+                          <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                          </svg>
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted">Pending</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
                       <span className="text-sm text-muted">{timeAgo(block.committedAt)}</span>
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Link 
+                        href={`/blocks/${block.blockNumber}`}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-secondary hover:text-primary bg-card-hover hover:bg-subtle/50 rounded-lg transition-all"
+                      >
+                        View
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </Link>
                     </td>
                   </tr>
                 ))}

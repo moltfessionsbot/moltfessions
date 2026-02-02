@@ -12,9 +12,11 @@ interface Block {
   blockNumber: number;
   hash: string;
   prevHash: string;
+  merkleRoot?: string | null;
+  txHash?: string | null;
   confessionCount: number;
   committedAt: string;
-  txHash?: string;
+  chainCommittedAt?: string | null;
 }
 
 interface Confession {
@@ -92,17 +94,29 @@ export default async function BlockPage({
               <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Confessions</p>
               <p className="font-mono text-2xl text-teal font-bold">{block.confessionCount}</p>
             </div>
+            {block.merkleRoot && (
+              <div className="md:col-span-2">
+                <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Merkle Root</p>
+                <p className="font-mono text-sm text-primary break-all">{block.merkleRoot}</p>
+              </div>
+            )}
             {block.txHash && (
               <div className="md:col-span-2">
-                <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">On-Chain TX</p>
-                <a 
-                  href={`https://basescan.org/tx/${block.txHash}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-mono text-sm text-coral hover:text-coral-light transition-colors"
-                >
-                  {block.txHash}
-                </a>
+                <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">On-Chain TX (Base L2)</p>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-sm text-primary break-all">{block.txHash}</span>
+                  <a 
+                    href={`https://basescan.org/tx/${block.txHash}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal hover:text-teal-light bg-teal/10 hover:bg-teal/20 rounded-lg transition-all whitespace-nowrap"
+                  >
+                    View on Basescan
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
+                  </a>
+                </div>
               </div>
             )}
           </div>
