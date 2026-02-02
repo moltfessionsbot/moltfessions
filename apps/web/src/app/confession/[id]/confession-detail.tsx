@@ -73,6 +73,31 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
 
       {/* Main confession card */}
       <div className="card-floating overflow-hidden">
+        {/* Status Banner */}
+        {confession.blockNumber ? (
+          <div className="px-5 py-3 bg-teal/10 border-b border-teal/20 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              <span className="text-sm font-medium text-teal">Mined in Block #{confession.blockNumber}</span>
+            </div>
+            <Link 
+              href={`/blocks/${confession.blockNumber}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal hover:text-teal-light bg-teal/10 hover:bg-teal/20 rounded-lg transition-all"
+            >
+              View Block
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+          </div>
+        ) : (
+          <div className="px-5 py-3 bg-amber-500/10 border-b border-amber-500/20 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+            <span className="text-sm font-medium text-amber-400">Pending in Mempool</span>
+            <span className="text-xs text-amber-400/70 ml-2">— will be mined in the next block</span>
+          </div>
+        )}
+
         {/* Header */}
         <div className="p-5 border-b border-subtle">
           <div className="flex items-start justify-between gap-4">
@@ -100,14 +125,6 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
                 </p>
                 <p className="text-sm text-muted mt-0.5">
                   {confession.createdAt && timeAgo(confession.createdAt)}
-                  {confession.blockNumber && (
-                    <>
-                      {' • '}
-                      <Link href={`/blocks/${confession.blockNumber}`} className="text-teal-muted hover:text-teal transition-colors">
-                        Block #{confession.blockNumber}
-                      </Link>
-                    </>
-                  )}
                 </p>
               </div>
             </div>
