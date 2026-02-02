@@ -38,51 +38,56 @@ export default async function BlocksPage({
   const totalPages = Math.ceil(total / 20);
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-base bg-space-gradient">
+      <div className="fixed inset-0 bg-space-radial pointer-events-none" />
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="relative max-w-6xl mx-auto px-6 py-10">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold">All Blocks</h1>
-          <span className="text-sm font-mono text-muted">{total} total</span>
+          <div>
+            <h1 className="text-3xl font-bold text-primary tracking-tight mb-2">All Blocks</h1>
+            <p className="text-secondary">Browse the confession chain history</p>
+          </div>
+          <span className="text-sm font-mono text-muted px-4 py-2 card-floating">{total} total</span>
         </div>
 
         {blocks.length === 0 ? (
-          <div className="bg-surface rounded-lg p-8 text-center">
-            <p className="text-muted font-mono">No blocks yet</p>
+          <div className="card-floating p-12 text-center">
+            <span className="text-5xl block mb-4">🫥</span>
+            <p className="text-secondary text-lg">No blocks yet</p>
             <p className="text-sm text-muted mt-2">Waiting for first confessions...</p>
           </div>
         ) : (
-          <div className="bg-surface rounded-lg overflow-hidden">
+          <div className="card-floating overflow-hidden">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border">
-                  <th className="px-4 py-3 text-left text-xs font-mono text-muted uppercase">Block</th>
-                  <th className="px-4 py-3 text-left text-xs font-mono text-muted uppercase">Hash</th>
-                  <th className="px-4 py-3 text-left text-xs font-mono text-muted uppercase">Confessions</th>
-                  <th className="px-4 py-3 text-left text-xs font-mono text-muted uppercase">Time</th>
+                <tr className="border-b border-subtle">
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Block</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Hash</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Confessions</th>
+                  <th className="px-5 py-4 text-left text-xs font-semibold text-muted uppercase tracking-wider">Time</th>
                 </tr>
               </thead>
               <tbody>
                 {blocks.map((block) => (
-                  <tr key={block.id} className="border-b border-border/50 hover:bg-surface/50">
-                    <td className="px-4 py-3">
+                  <tr key={block.id} className="border-b border-subtle/50 hover:bg-card-hover transition-colors">
+                    <td className="px-5 py-4">
                       <Link 
                         href={`/blocks/${block.blockNumber}`}
-                        className="text-confirmed hover:underline font-mono"
+                        className="text-teal hover:text-teal-light font-mono font-medium transition-colors"
                       >
                         #{block.blockNumber}
                       </Link>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <span className="font-mono text-sm text-muted">
                         {block.hash.slice(0, 18)}...
                       </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="font-mono">{block.confessionCount}</span>
+                    <td className="px-5 py-4">
+                      <span className="font-mono text-primary">{block.confessionCount}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4">
                       <span className="text-sm text-muted">{timeAgo(block.committedAt)}</span>
                     </td>
                   </tr>
@@ -94,11 +99,11 @@ export default async function BlocksPage({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="flex items-center justify-center gap-3 mt-10">
             {page > 1 && (
               <Link
                 href={`/blocks?page=${page - 1}`}
-                className="px-4 py-2 bg-surface hover:bg-surface/80 rounded-lg text-sm"
+                className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-subtle text-secondary hover:text-primary hover:border-border transition-all"
               >
                 Previous
               </Link>
@@ -109,7 +114,7 @@ export default async function BlocksPage({
             {page < totalPages && (
               <Link
                 href={`/blocks?page=${page + 1}`}
-                className="px-4 py-2 bg-surface hover:bg-surface/80 rounded-lg text-sm"
+                className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-subtle text-secondary hover:text-primary hover:border-border transition-all"
               >
                 Next
               </Link>

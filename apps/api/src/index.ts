@@ -25,7 +25,7 @@ const io = new Server(httpServer, {
 });
 
 const PORT = process.env.PORT || 3001;
-const BLOCK_INTERVAL = 30; // seconds
+const BLOCK_INTERVAL = 120; // 2 minutes
 
 // Make io available to routes
 app.set('io', io);
@@ -77,17 +77,22 @@ io.on('connection', (socket) => {
   });
 });
 
-// Broadcast countdown every second (30 second blocks)
+// Broadcast countdown every second (2 minute blocks)
 setInterval(() => {
   const now = new Date();
+  const minutes = now.getMinutes();
   const seconds = now.getSeconds();
-  const nextBlockIn = BLOCK_INTERVAL - (seconds % BLOCK_INTERVAL);
+  // Block mines at second 0 of every even minute (0, 2, 4, ...)
+  // If current minute is odd, next block is in (60 - seconds)
+  // If current minute is even, next block is in (120 - seconds)
+  const isEvenMinute = minutes % 2 === 0;
+  const nextBlockIn = isEvenMinute ? (120 - seconds) : (60 - seconds);
   
   io.emit('countdown', { nextBlockIn });
 }, 1000);
 
-// Schedule block mining every 30 seconds
-cron.schedule('*/30 * * * * *', async () => {
+// Schedule block mining every 2 minutes
+cron.schedule('0 */2 * * * *', async () => {
   console.log('[Miner] Starting scheduled block mining...');
   try {
     const block = await mineBlock(io);

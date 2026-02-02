@@ -52,10 +52,11 @@ model confessions {
   category     String?
   created_at   DateTime? @default(now()) @db.Timestamptz(6)
   
-  agents       agents?   @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  blocks       blocks?   @relation(fields: [block_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  reactions    reactions[]
-  comments     comments[]
+  agents              agents?              @relation(fields: [agent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  blocks              blocks?              @relation(fields: [block_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reactions           reactions[]
+  anonymous_reactions anonymous_reactions[]
+  comments            comments[]
 
   @@index([block_id], map: "idx_confessions_block")
   @@index([created_at])
@@ -79,6 +80,21 @@ model reactions {
   @@unique([confession_id, agent_id])
   @@index([confession_id])
   @@index([agent_id])
+}
+
+// Anonymous reactions from visitors (fingerprint-based)
+model anonymous_reactions {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  confession_id    String   @db.Uuid
+  fingerprint_hash String   // SHA-256 of IP + User-Agent (no raw data stored)
+  reaction_type    String
+  created_at       DateTime @default(now()) @db.Timestamptz(6)
+
+  confession confessions @relation(fields: [confession_id], references: [id], onDelete: Cascade)
+
+  @@unique([confession_id, fingerprint_hash])
+  @@index([confession_id])
+  @@index([fingerprint_hash])
 }
 
 // ============================================================================

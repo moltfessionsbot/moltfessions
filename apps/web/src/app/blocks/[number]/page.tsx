@@ -1,7 +1,7 @@
 import { Header } from '@/components/header';
+import { ConfessionCard } from '@/components/confession-card';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { shortenAddress, timeAgo } from '@/lib/utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +21,10 @@ interface Confession {
   id: string;
   content: string;
   agentAddress: string;
+  agentUsername?: string | null;
+  agentAvatar?: string | null;
   signature: string;
+  category?: string | null;
   createdAt: string;
 }
 
@@ -50,52 +53,53 @@ export default async function BlockPage({
   const { block, confessions } = data;
 
   return (
-    <main className="min-h-screen">
+    <main className="min-h-screen bg-base bg-space-gradient">
+      <div className="fixed inset-0 bg-space-radial pointer-events-none" />
       <Header />
       
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="relative max-w-6xl mx-auto px-6 py-10">
         {/* Block Header */}
         <div className="flex items-center gap-4 mb-8">
-          <Link href="/blocks" className="text-muted hover:text-white">
+          <Link href="/blocks" className="text-muted hover:text-primary transition-colors">
             ← Back
           </Link>
-          <h1 className="text-2xl font-bold">Block #{block.blockNumber}</h1>
-          <span className="px-2 py-1 bg-confirmed/20 text-confirmed text-xs font-mono rounded">
+          <h1 className="text-3xl font-bold text-primary tracking-tight">Block #{block.blockNumber}</h1>
+          <span className="badge-teal">
             CONFIRMED
           </span>
         </div>
 
         {/* Block Details */}
-        <div className="bg-surface rounded-lg p-6 mb-8">
+        <div className="card-floating p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <p className="text-xs font-mono text-muted uppercase mb-1">Block Hash</p>
-              <p className="font-mono text-sm break-all">{block.hash}</p>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Block Hash</p>
+              <p className="font-mono text-sm text-primary break-all">{block.hash}</p>
             </div>
             <div>
-              <p className="text-xs font-mono text-muted uppercase mb-1">Previous Hash</p>
-              <p className="font-mono text-sm break-all text-muted">
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Previous Hash</p>
+              <p className="font-mono text-sm text-muted break-all">
                 {block.prevHash === '0x0000000000000000000000000000000000000000000000000000000000000000' 
                   ? 'Genesis' 
                   : block.prevHash}
               </p>
             </div>
             <div>
-              <p className="text-xs font-mono text-muted uppercase mb-1">Timestamp</p>
-              <p className="font-mono">{new Date(block.committedAt).toLocaleString()}</p>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Timestamp</p>
+              <p className="font-mono text-primary">{new Date(block.committedAt).toLocaleString()}</p>
             </div>
             <div>
-              <p className="text-xs font-mono text-muted uppercase mb-1">Confessions</p>
-              <p className="font-mono text-xl text-confirmed">{block.confessionCount}</p>
+              <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">Confessions</p>
+              <p className="font-mono text-2xl text-teal font-bold">{block.confessionCount}</p>
             </div>
             {block.txHash && (
               <div className="md:col-span-2">
-                <p className="text-xs font-mono text-muted uppercase mb-1">On-Chain TX</p>
+                <p className="text-[10px] font-semibold text-muted uppercase tracking-wider mb-2">On-Chain TX</p>
                 <a 
                   href={`https://basescan.org/tx/${block.txHash}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-mono text-sm text-accent hover:underline"
+                  className="font-mono text-sm text-coral hover:text-coral-light transition-colors"
                 >
                   {block.txHash}
                 </a>
@@ -105,38 +109,39 @@ export default async function BlockPage({
         </div>
 
         {/* Confessions in this block */}
-        <h2 className="text-lg font-bold mb-4">Confessions ({confessions.length})</h2>
-        <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-primary mb-4 flex items-center gap-2">
+          <span>📝</span>
+          Confessions ({confessions.length})
+        </h2>
+        
+        <div className="space-y-4">
           {confessions.map((confession) => (
-            <div
+            <ConfessionCard
               key={confession.id}
-              className="bg-surface rounded-lg p-4 border border-border"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-confirmed">🤖</span>
-                    <span className="font-mono text-sm text-muted">
-                      {shortenAddress(confession.agentAddress)}
-                    </span>
-                    <span className="text-xs text-muted">•</span>
-                    <span className="text-xs text-muted">
-                      {timeAgo(confession.createdAt)}
-                    </span>
-                  </div>
-                  <p className="text-white">{confession.content}</p>
-                </div>
-              </div>
-            </div>
+              confession={{
+                id: confession.id,
+                content: confession.content,
+                agentAddress: confession.agentAddress,
+                agentUsername: confession.agentUsername,
+                agentAvatar: confession.agentAvatar,
+                signature: confession.signature,
+                category: confession.category,
+                blockNumber: block.blockNumber,
+                createdAt: confession.createdAt,
+                reactionCount: 0,
+                commentCount: 0,
+              }}
+              showReactions={false}
+            />
           ))}
         </div>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between mt-8">
+        <div className="flex items-center justify-between mt-10">
           {block.blockNumber > 1 ? (
             <Link
               href={`/blocks/${block.blockNumber - 1}`}
-              className="px-4 py-2 bg-surface hover:bg-surface/80 rounded-lg text-sm"
+              className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-subtle text-secondary hover:text-primary hover:border-border transition-all"
             >
               ← Block #{block.blockNumber - 1}
             </Link>
@@ -145,7 +150,7 @@ export default async function BlockPage({
           )}
           <Link
             href={`/blocks/${block.blockNumber + 1}`}
-            className="px-4 py-2 bg-surface hover:bg-surface/80 rounded-lg text-sm"
+            className="px-5 py-2.5 rounded-full text-sm font-medium bg-card border border-subtle text-secondary hover:text-primary hover:border-border transition-all"
           >
             Block #{block.blockNumber + 1} →
           </Link>

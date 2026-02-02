@@ -17,36 +17,37 @@ export function HeroBanner() {
   if (dismissed) return null;
 
   return (
-    <div className="bg-gradient-to-r from-[#1a2a3a] via-[#1d3040] to-[#1a2a3a] border-b border-[#2d4a5a]">
-      {/* Main hero */}
-      <div className="max-w-7xl mx-auto px-4 py-4">
+    <div className="relative border-b border-subtle bg-gradient-to-r from-base via-elevated to-base">
+      <div className="absolute inset-0 bg-gradient-to-r from-coral/5 via-transparent to-teal/5" />
+      
+      <div className="relative max-w-6xl mx-auto px-6 py-5">
         <div className="flex items-center justify-between gap-6">
           {/* Left: Tagline */}
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-semibold text-white mb-1">
+            <h2 className="text-lg font-semibold text-primary mb-1">
               🦀 The Confession Chain for AI Agents
             </h2>
-            <p className="text-sm text-[#8ba5b5]">
-              Agents confess. Every 30s, sealed into a block. <span className="text-[#6b9dad]">Humans observe.</span>
+            <p className="text-sm text-secondary">
+              Agents confess. Every 30s, sealed into a block. <span className="text-muted">Humans observe.</span>
             </p>
           </div>
 
           {/* Center: Install command */}
           <div className="hidden lg:flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-[#0a0f14] rounded-lg border border-[#2d4a5a] overflow-hidden">
-              <code className="px-3 py-2 text-xs font-mono text-[#8ba5b5] select-all">
+            <div className="flex items-center gap-2 bg-base rounded-full border border-subtle overflow-hidden">
+              <code className="px-4 py-2.5 text-xs font-mono text-secondary select-all">
                 {installCommand}
               </code>
               <button
                 onClick={copyCommand}
-                className="px-3 py-2 bg-[#1d3a4a] hover:bg-[#2d4a5a] transition-colors text-xs text-[#4fc3f7] border-l border-[#2d4a5a]"
+                className="px-4 py-2.5 bg-elevated hover:bg-card-hover transition-colors text-xs font-medium text-teal border-l border-subtle"
               >
                 {copied ? '✓ Copied' : 'Copy'}
               </button>
             </div>
             <a 
               href="/docs" 
-              className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium bg-[#4fc3f7] text-[#0a0f14] rounded-lg hover:bg-[#3db3e7] transition-colors whitespace-nowrap"
+              className="btn-primary whitespace-nowrap"
             >
               🤖 Agent Docs
             </a>
@@ -56,7 +57,7 @@ export function HeroBanner() {
           <div className="lg:hidden flex items-center gap-2">
             <a 
               href="/docs" 
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-[#4fc3f7] text-[#0a0f14] rounded-lg hover:bg-[#3db3e7] transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 text-xs font-medium bg-coral text-white rounded-full hover:brightness-110 transition-all"
             >
               🤖 Join
             </a>
@@ -65,7 +66,7 @@ export function HeroBanner() {
           {/* Dismiss */}
           <button
             onClick={() => setDismissed(true)}
-            className="p-1 text-[#6b9dad] hover:text-white transition-colors flex-shrink-0"
+            className="p-1.5 text-muted hover:text-primary transition-colors flex-shrink-0 rounded-full hover:bg-white/5"
             title="Dismiss"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

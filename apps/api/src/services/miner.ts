@@ -80,6 +80,8 @@ export async function mineBlock(io?: Server) {
       id: c.id,
       content: c.content,
       agentAddress: c.agents?.address,
+      agentUsername: c.agents?.username || null,
+      agentAvatar: c.agents?.avatar_url || null,
       signature: c.signature,
       category: c.category,
       createdAt: c.created_at,

@@ -24,7 +24,6 @@ interface TreemapRect {
   hue: number;
 }
 
-// Generate consistent hue for an address
 function addressToHue(address: string): number {
   let hash = 0;
   for (let i = 0; i < address.length; i++) {
@@ -34,8 +33,6 @@ function addressToHue(address: string): number {
   return 60 + (Math.abs(hash) % 120);
 }
 
-// Squarified Treemap Algorithm
-// Based on: https://www.win.tue.nl/~vanwijk/stm.pdf
 function squarify(
   items: { address: string; count: number; hue: number }[],
   x: number,
@@ -66,11 +63,9 @@ function squarify(
   let ch = height;
 
   while (currentItems.length > 0) {
-    // Determine if we should lay out horizontally or vertically
     const isWide = cw >= ch;
     const shortSide = isWide ? ch : cw;
 
-    // Find the best row of items
     const row: typeof currentItems = [];
     let rowValue = 0;
     let bestRatio = Infinity;
@@ -79,7 +74,6 @@ function squarify(
       const testRow = [...row, currentItems[i]];
       const testValue = rowValue + currentItems[i].count;
       
-      // Calculate the worst aspect ratio in this row
       const rowLength = (testValue / totalValue) * (isWide ? cw : ch);
       let worstRatio = 0;
 
@@ -90,7 +84,6 @@ function squarify(
         worstRatio = Math.max(worstRatio, ratio);
       }
 
-      // If this makes things worse and we have at least one item, stop
       if (worstRatio > bestRatio && row.length > 0) {
         break;
       }
@@ -100,10 +93,8 @@ function squarify(
       bestRatio = worstRatio;
     }
 
-    // Remove used items
     currentItems = currentItems.slice(row.length);
 
-    // Layout the row
     const rowFraction = rowValue / totalValue;
     const rowLength = isWide ? cw * rowFraction : ch * rowFraction;
     let offset = 0;
@@ -123,21 +114,12 @@ function squarify(
       offset += itemLength;
     }
 
-    // Update remaining area
     if (isWide) {
       cx += rowLength;
       cw -= rowLength;
     } else {
       cy += rowLength;
       ch -= rowLength;
-    }
-
-    // Recalculate total for remaining items
-    const remainingTotal = currentItems.reduce((sum, item) => sum + item.count, 0);
-    if (remainingTotal > 0) {
-      // Scale remaining area
-      const scale = remainingTotal / totalValue;
-      // Already handled by the layout
     }
   }
 
@@ -181,24 +163,25 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
   const maxCount = Math.max(...agentData.map(a => a.count), 1);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-[#4fc3f7] font-medium text-sm">
+        <h3 className="text-sm font-semibold text-primary flex items-center gap-2">
+          <span>🔍</span>
           Mempool Goggles™
         </h3>
-        <span className="text-xs text-[#6b9dad]">
+        <span className="text-xs text-muted">
           {confessions.length} tx • {agentData.length} agents
         </span>
       </div>
 
       {/* Square container */}
-      <div className="bg-[#0a1015] rounded-xl border border-[#1d3a4a] relative aspect-square overflow-hidden">
+      <div className="card-floating relative aspect-square overflow-hidden">
         {confessions.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <span className="text-4xl">🫥</span>
-              <p className="text-[#6b9dad] font-mono mt-2 text-sm">Empty mempool</p>
+              <span className="text-5xl">🫥</span>
+              <p className="text-muted font-mono mt-3 text-sm">Empty mempool</p>
             </div>
           </div>
         ) : (
@@ -206,8 +189,8 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
             {/* Background grid */}
             <defs>
               <pattern id="treemapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-                <rect width="20" height="20" fill="#0a1015"/>
-                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#152025" strokeWidth="0.5"/>
+                <rect width="20" height="20" fill="#0a0a0f"/>
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#1a1a24" strokeWidth="0.5"/>
               </pattern>
             </defs>
             <rect width="400" height="400" fill="url(#treemapGrid)" />
@@ -218,8 +201,7 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
               const intensity = 35 + (rect.count / maxCount) * 25;
               const saturation = 45 + (rect.count / maxCount) * 25;
               
-              // Add small gap between rectangles
-              const gap = 1.5;
+              const gap = 2;
               const rx = rect.x + gap;
               const ry = rect.y + gap;
               const rw = Math.max(0, rect.width - gap * 2);
@@ -229,13 +211,12 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
 
               return (
                 <g key={rect.address}>
-                  {/* Rectangle */}
                   <rect
                     x={rx}
                     y={ry}
                     width={rw}
                     height={rh}
-                    rx={Math.min(4, Math.min(rw, rh) / 4)}
+                    rx={Math.min(8, Math.min(rw, rh) / 4)}
                     fill={`hsl(${rect.hue}, ${saturation}%, ${isHovered ? intensity + 15 : intensity}%)`}
                     stroke={`hsl(${rect.hue}, ${saturation}%, ${isHovered ? 70 : 55}%)`}
                     strokeWidth={isHovered ? 2 : 0.5}
@@ -244,7 +225,6 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
                     onMouseLeave={() => setHoveredAddress(null)}
                   />
                   
-                  {/* Count label for larger rectangles */}
                   {rw > 30 && rh > 25 && (
                     <text
                       x={rx + rw / 2}
@@ -260,7 +240,6 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
                     </text>
                   )}
                   
-                  {/* Address label for very large rectangles */}
                   {rw > 60 && rh > 45 && (
                     <text
                       x={rx + rw / 2}
@@ -282,18 +261,18 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
 
         {/* Hover tooltip */}
         {hoveredAgent && (
-          <div className="absolute top-3 right-3 bg-[#1a2530]/95 border border-[#3d5a6a] rounded-lg p-3 shadow-xl z-10 backdrop-blur-sm">
+          <div className="absolute top-3 right-3 card-floating p-3 shadow-xl z-10">
             <div className="flex items-center gap-2 mb-1">
               <div 
                 className="w-3 h-3 rounded"
                 style={{ background: `hsl(${hoveredAgent.hue}, 50%, 45%)` }}
               />
-              <p className="font-mono text-sm text-[#4fc3f7]">
+              <p className="font-mono text-sm text-teal">
                 {shortenAddress(hoveredAgent.address)}
               </p>
             </div>
-            <p className="text-2xl font-bold text-white">{hoveredAgent.count}</p>
-            <p className="text-xs text-[#6b9dad]">
+            <p className="text-2xl font-bold text-primary">{hoveredAgent.count}</p>
+            <p className="text-xs text-muted">
               {Math.round((hoveredAgent.count / confessions.length) * 100)}% of mempool
             </p>
           </div>
@@ -305,10 +284,10 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
         {agentData.slice(0, 8).map((agent) => (
           <div 
             key={agent.address}
-            className={`flex items-center gap-1.5 px-2 py-1 rounded cursor-pointer transition-all ${
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full cursor-pointer transition-all border ${
               hoveredAddress === agent.address 
-                ? 'bg-[#2d4a5a] scale-105' 
-                : 'hover:bg-[#1d2d3a]'
+                ? 'bg-card-hover border-border scale-105' 
+                : 'border-transparent hover:bg-card hover:border-subtle'
             }`}
             onMouseEnter={() => setHoveredAddress(agent.address)}
             onMouseLeave={() => setHoveredAddress(null)}
@@ -317,10 +296,10 @@ export function MempoolHeatmap({ confessions }: MempoolHeatmapProps) {
               className="w-2.5 h-2.5 rounded-sm"
               style={{ background: `hsl(${agent.hue}, 50%, 45%)` }}
             />
-            <span className="font-mono text-xs text-[#8ba5b5]">
+            <span className="font-mono text-xs text-secondary">
               {agent.address.slice(2, 6)}
             </span>
-            <span className="font-bold text-xs text-white">
+            <span className="font-bold text-xs text-primary">
               {agent.count}
             </span>
           </div>

@@ -11,8 +11,6 @@ interface PageParams {
 
 async function getConfession(id: string) {
   try {
-    // Note: We need to use the feed endpoint since there's no direct confession endpoint
-    // In production, you'd add a GET /api/v1/confessions/:id endpoint
     const res = await fetch(`${API_URL}/api/v1/feed?pageSize=1000`, { cache: 'no-store' });
     const data = await res.json();
     if (data.success) {
@@ -53,10 +51,11 @@ export default async function ConfessionPage({ params }: PageParams) {
   ]);
 
   return (
-    <main className="min-h-screen bg-[#0a0f14]">
+    <main className="min-h-screen bg-base bg-space-gradient">
+      <div className="fixed inset-0 bg-space-radial pointer-events-none" />
       <Header />
       
-      <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="relative max-w-3xl mx-auto px-6 py-10">
         <ConfessionDetail 
           confession={confession}
           reactions={reactionsData?.reactions || {}}

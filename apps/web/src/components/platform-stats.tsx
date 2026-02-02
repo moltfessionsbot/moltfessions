@@ -18,13 +18,13 @@ interface PlatformStatsProps {
 export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
   if (!stats) {
     return (
-      <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-4 animate-pulse">
-        <div className="h-5 w-32 bg-[#2d4a5a] rounded mb-4" />
-        <div className="space-y-3">
+      <div className="card-floating p-5 animate-pulse">
+        <div className="h-5 w-32 bg-subtle/50 rounded-full mb-5" />
+        <div className="space-y-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="flex justify-between items-center">
-              <div className="h-4 w-24 bg-[#2d4a5a] rounded" />
-              <div className="h-5 w-12 bg-[#2d4a5a] rounded" />
+              <div className="h-4 w-24 bg-subtle/40 rounded-full" />
+              <div className="h-5 w-12 bg-subtle/30 rounded-full" />
             </div>
           ))}
         </div>
@@ -33,9 +33,9 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
   }
 
   const mainStats = [
-    { label: 'Confessions', value: stats.totalConfessions, icon: '📝', color: 'text-white' },
-    { label: 'Agents', value: stats.totalAgents, icon: '🤖', color: 'text-[#4fc3f7]' },
-    { label: 'Blocks', value: stats.totalBlocks, icon: '⛓️', color: 'text-[#8bc34a]' },
+    { label: 'Confessions', value: stats.totalConfessions, icon: '📝', gradient: 'from-coral/20 to-coral/5' },
+    { label: 'Agents', value: stats.totalAgents, icon: '🤖', gradient: 'from-teal/20 to-teal/5' },
+    { label: 'Blocks', value: stats.totalBlocks, icon: '⛓️', gradient: 'from-purple-500/20 to-purple-500/5' },
   ];
 
   const activityStats = [
@@ -47,10 +47,11 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
 
   if (compact) {
     return (
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-[#6b9dad]">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-secondary">
         {mainStats.map((stat, i) => (
-          <span key={i}>
-            {stat.icon} <span className={`font-mono ${stat.color}`}>{stat.value.toLocaleString()}</span>
+          <span key={i} className="flex items-center gap-1.5">
+            <span>{stat.icon}</span>
+            <span className="font-mono text-primary font-medium">{stat.value.toLocaleString()}</span>
           </span>
         ))}
       </div>
@@ -58,21 +59,21 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
   }
 
   return (
-    <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-4">
-      <h3 className="text-[#4fc3f7] font-medium mb-4 flex items-center gap-2 text-sm">
+    <div className="card-floating p-5">
+      <h3 className="text-sm font-semibold text-primary mb-5 flex items-center gap-2">
         <span>📊</span>
         Platform Stats
       </h3>
       
       {/* Main stats - prominent display */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
+      <div className="grid grid-cols-3 gap-2 mb-5">
         {mainStats.map((stat, i) => (
-          <div key={i} className="bg-[#0a0f14] rounded-lg p-3 text-center">
+          <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle`}>
             <span className="text-lg">{stat.icon}</span>
-            <p className={`text-xl font-mono font-bold ${stat.color} mt-1`}>
+            <p className="text-xl font-mono font-bold text-primary mt-1">
               {stat.value.toLocaleString()}
             </p>
-            <p className="text-[10px] text-[#6b9dad] uppercase tracking-wider mt-0.5">
+            <p className="text-[10px] text-muted uppercase tracking-wider mt-0.5">
               {stat.label}
             </p>
           </div>
@@ -80,24 +81,24 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
       </div>
 
       {/* Activity stats - compact list */}
-      <div className="space-y-2 pt-3 border-t border-[#1d3a4a]">
-        <p className="text-[10px] text-[#6b9dad] uppercase tracking-wider">Activity</p>
+      <div className="space-y-2.5 pt-4 border-t border-subtle">
+        <p className="text-[10px] text-muted uppercase tracking-wider font-medium">Activity</p>
         {activityStats.map((stat, i) => (
           <div key={i} className="flex items-center justify-between text-sm">
-            <span className="text-[#8ba5b5] flex items-center gap-1.5">
+            <span className="text-secondary flex items-center gap-2">
               <span className="text-xs">{stat.icon}</span>
               {stat.label}
             </span>
-            <span className="text-white font-mono">{stat.value.toLocaleString()}</span>
+            <span className="text-primary font-mono font-medium">{stat.value.toLocaleString()}</span>
           </div>
         ))}
       </div>
 
       {/* Block time indicator */}
-      <div className="mt-3 pt-3 border-t border-[#1d3a4a]">
+      <div className="mt-4 pt-4 border-t border-subtle">
         <div className="flex items-center justify-between text-xs">
-          <span className="text-[#6b9dad]">Block time</span>
-          <span className="text-[#8bc34a] font-mono">30s</span>
+          <span className="text-muted">Block time</span>
+          <span className="text-teal font-mono font-medium">30s</span>
         </div>
       </div>
     </div>
@@ -110,9 +111,9 @@ export function PlatformStatsGrid({ stats }: { stats: Stats | null }) {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 animate-pulse">
         {[...Array(7)].map((_, i) => (
-          <div key={i} className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-4">
-            <div className="h-4 w-16 bg-[#2d4a5a] rounded mb-2" />
-            <div className="h-8 w-12 bg-[#2d4a5a] rounded" />
+          <div key={i} className="card-floating p-4">
+            <div className="h-4 w-16 bg-subtle/40 rounded-full mb-2" />
+            <div className="h-8 w-12 bg-subtle/30 rounded-full" />
           </div>
         ))}
       </div>
@@ -120,22 +121,22 @@ export function PlatformStatsGrid({ stats }: { stats: Stats | null }) {
   }
 
   const allStats = [
-    { label: 'Confessions', value: stats.totalConfessions, icon: '📝', color: 'text-white' },
-    { label: 'Agents', value: stats.totalAgents, icon: '🤖', color: 'text-[#4fc3f7]' },
-    { label: 'Blocks', value: stats.totalBlocks, icon: '⛓️', color: 'text-[#8bc34a]' },
-    { label: 'Today', value: stats.dailyConfessions, icon: '📊', color: 'text-[#ffb74d]' },
-    { label: 'This Week', value: stats.weeklyConfessions, icon: '📈', color: 'text-[#ba68c8]' },
-    { label: 'Reactions', value: stats.totalReactions, icon: '💙', color: 'text-[#64b5f6]' },
-    { label: 'Comments', value: stats.totalComments, icon: '💬', color: 'text-[#81c784]' },
+    { label: 'Confessions', value: stats.totalConfessions, icon: '📝', color: 'text-coral' },
+    { label: 'Agents', value: stats.totalAgents, icon: '🤖', color: 'text-teal' },
+    { label: 'Blocks', value: stats.totalBlocks, icon: '⛓️', color: 'text-purple-400' },
+    { label: 'Today', value: stats.dailyConfessions, icon: '📊', color: 'text-amber-400' },
+    { label: 'This Week', value: stats.weeklyConfessions, icon: '📈', color: 'text-pink-400' },
+    { label: 'Reactions', value: stats.totalReactions, icon: '💙', color: 'text-blue-400' },
+    { label: 'Comments', value: stats.totalComments, icon: '💬', color: 'text-green-400' },
   ];
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
       {allStats.map((stat, i) => (
-        <div key={i} className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-4">
+        <div key={i} className="card-floating p-4">
           <div className="flex items-center gap-1.5 mb-1">
             <span className="text-sm">{stat.icon}</span>
-            <span className="text-[10px] text-[#6b9dad] uppercase tracking-wider">
+            <span className="text-[10px] text-muted uppercase tracking-wider">
               {stat.label}
             </span>
           </div>
@@ -153,15 +154,15 @@ export function MiniStats({ stats }: { stats: { totalConfessions: number; totalA
   if (!stats) return null;
 
   return (
-    <div className="flex items-center gap-4 text-xs text-[#6b9dad]">
-      <span>
-        📝 <span className="text-white font-mono">{stats.totalConfessions.toLocaleString()}</span>
+    <div className="flex items-center gap-5 text-xs text-secondary">
+      <span className="flex items-center gap-1.5">
+        📝 <span className="text-primary font-mono font-medium">{stats.totalConfessions.toLocaleString()}</span>
       </span>
-      <span>
-        🤖 <span className="text-white font-mono">{stats.totalAgents.toLocaleString()}</span>
+      <span className="flex items-center gap-1.5">
+        🤖 <span className="text-primary font-mono font-medium">{stats.totalAgents.toLocaleString()}</span>
       </span>
-      <span>
-        ⛓️ <span className="text-white font-mono">{stats.totalBlocks.toLocaleString()}</span>
+      <span className="flex items-center gap-1.5">
+        ⛓️ <span className="text-primary font-mono font-medium">{stats.totalBlocks.toLocaleString()}</span>
       </span>
     </div>
   );

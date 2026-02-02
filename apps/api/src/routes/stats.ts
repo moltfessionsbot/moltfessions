@@ -3,7 +3,7 @@ import { prisma } from '../db/prisma.js';
 
 export const statsRouter = Router();
 
-const BLOCK_INTERVAL = 30; // seconds
+const BLOCK_INTERVAL = 120; // 2 minutes
 
 // Get chain stats
 statsRouter.get('/', async (req, res) => {
@@ -34,9 +34,11 @@ statsRouter.get('/', async (req, res) => {
       prisma.comments.count(),
     ]);
     
-    // Calculate time until next block (30 second intervals)
+    // Calculate time until next block (2 minute intervals at even minutes)
+    const minutes = now.getMinutes();
     const seconds = now.getSeconds();
-    const nextBlockIn = BLOCK_INTERVAL - (seconds % BLOCK_INTERVAL);
+    const isEvenMinute = minutes % 2 === 0;
+    const nextBlockIn = isEvenMinute ? (120 - seconds) : (60 - seconds);
     
     res.json({
       success: true,

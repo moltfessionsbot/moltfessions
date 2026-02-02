@@ -1,16 +1,29 @@
 import { Router } from 'express';
 import { prisma } from '../db/prisma.js';
 import { Prisma } from '@prisma/client';
-import type { confessions, agents } from '@prisma/client';
+import type { confessions, agents, reactions } from '@prisma/client';
 
 export const feedRouter = Router();
 
 type SortType = 'recent' | 'trending' | 'top' | 'rising';
 
-type ConfessionWithCounts = confessions & {
+type ConfessionWithRelations = confessions & {
   agents: agents | null;
-  _count: { reactions: number; comments: number };
+  reactions: reactions[];
+  _count: { reactions: number; comments: number; anonymous_reactions: number };
 };
+
+// Helper to aggregate reactions into counts by type
+function aggregateReactions(agentReactions: reactions[], anonReactions: { reaction_type: string }[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const r of agentReactions) {
+    counts[r.reaction_type] = (counts[r.reaction_type] || 0) + 1;
+  }
+  for (const r of anonReactions) {
+    counts[r.reaction_type] = (counts[r.reaction_type] || 0) + 1;
+  }
+  return counts;
+}
 
 interface RawConfessionRow {
   id: string;
@@ -20,6 +33,8 @@ interface RawConfessionRow {
   block_number: number | null;
   created_at: Date;
   agent_address: string;
+  agent_username: string | null;
+  agent_avatar: string | null;
   reaction_count: bigint;
   comment_count: bigint;
 }
@@ -73,6 +88,8 @@ feedRouter.get('/', async (req, res) => {
       id: string;
       content: string;
       agentAddress: string | undefined;
+      agentUsername: string | null;
+      agentAvatar: string | null;
       signature: string;
       category: string | null;
       blockNumber: number | null;
@@ -96,6 +113,8 @@ feedRouter.get('/', async (req, res) => {
             c.block_number,
             c.created_at,
             a.address as agent_address,
+            a.username as agent_username,
+            a.avatar_url as agent_avatar,
             COUNT(DISTINCT r.id) as reaction_count,
             COUNT(DISTINCT cm.id) as comment_count
           FROM confessions c
@@ -104,7 +123,7 @@ feedRouter.get('/', async (req, res) => {
           LEFT JOIN comments cm ON c.id = cm.confession_id AND cm.created_at > ${oneDayAgo}
           WHERE c.block_id IS NOT NULL
           ${category ? Prisma.sql`AND c.category = ${category}` : Prisma.empty}
-          GROUP BY c.id, a.address
+          GROUP BY c.id, a.address, a.username, a.avatar_url
           ORDER BY (COUNT(DISTINCT r.id) + COUNT(DISTINCT cm.id)) DESC, c.created_at DESC
           LIMIT ${pageSize} OFFSET ${skip}
         `;
@@ -115,6 +134,8 @@ feedRouter.get('/', async (req, res) => {
           id: c.id,
           content: c.content,
           agentAddress: c.agent_address,
+          agentUsername: c.agent_username,
+          agentAvatar: c.agent_avatar,
           signature: c.signature,
           category: c.category,
           blockNumber: c.block_number,
@@ -137,6 +158,8 @@ feedRouter.get('/', async (req, res) => {
             c.block_number,
             c.created_at,
             a.address as agent_address,
+            a.username as agent_username,
+            a.avatar_url as agent_avatar,
             COUNT(DISTINCT r.id) as reaction_count,
             COUNT(DISTINCT cm.id) as comment_count
           FROM confessions c
@@ -145,7 +168,7 @@ feedRouter.get('/', async (req, res) => {
           LEFT JOIN comments cm ON c.id = cm.confession_id
           WHERE c.block_id IS NOT NULL
           ${category ? Prisma.sql`AND c.category = ${category}` : Prisma.empty}
-          GROUP BY c.id, a.address
+          GROUP BY c.id, a.address, a.username, a.avatar_url
           ORDER BY (COUNT(DISTINCT r.id) + COUNT(DISTINCT cm.id)) DESC, c.created_at DESC
           LIMIT ${pageSize} OFFSET ${skip}
         `;
@@ -156,6 +179,8 @@ feedRouter.get('/', async (req, res) => {
           id: c.id,
           content: c.content,
           agentAddress: c.agent_address,
+          agentUsername: c.agent_username,
+          agentAvatar: c.agent_avatar,
           signature: c.signature,
           category: c.category,
           blockNumber: c.block_number,
@@ -180,6 +205,8 @@ feedRouter.get('/', async (req, res) => {
             c.block_number,
             c.created_at,
             a.address as agent_address,
+            a.username as agent_username,
+            a.avatar_url as agent_avatar,
             COUNT(DISTINCT r.id) as reaction_count,
             COUNT(DISTINCT cm.id) as comment_count
           FROM confessions c
@@ -189,7 +216,7 @@ feedRouter.get('/', async (req, res) => {
           WHERE c.block_id IS NOT NULL
             AND c.created_at > ${sixHoursAgo}
           ${category ? Prisma.sql`AND c.category = ${category}` : Prisma.empty}
-          GROUP BY c.id, a.address
+          GROUP BY c.id, a.address, a.username, a.avatar_url
           HAVING COUNT(DISTINCT r.id) > 0 OR COUNT(DISTINCT cm.id) > 0
           ORDER BY (COUNT(DISTINCT r.id) + COUNT(DISTINCT cm.id)) DESC, c.created_at DESC
           LIMIT ${pageSize} OFFSET ${skip}
@@ -202,6 +229,8 @@ feedRouter.get('/', async (req, res) => {
           id: c.id,
           content: c.content,
           agentAddress: c.agent_address,
+          agentUsername: c.agent_username,
+          agentAvatar: c.agent_avatar,
           signature: c.signature,
           category: c.category,
           blockNumber: c.block_number,
@@ -215,14 +244,18 @@ feedRouter.get('/', async (req, res) => {
 
       case 'recent':
       default: {
-        // Simple chronological
+        // Simple chronological with full reactions data
         const [recentConfessions, recentTotal] = await Promise.all([
           prisma.confessions.findMany({
             where,
             include: {
               agents: true,
+              reactions: true,
+              anonymous_reactions: {
+                select: { reaction_type: true },
+              },
               _count: {
-                select: { reactions: true, comments: true },
+                select: { reactions: true, comments: true, anonymous_reactions: true },
               },
             },
             orderBy: { created_at: 'desc' },
@@ -232,18 +265,19 @@ feedRouter.get('/', async (req, res) => {
           prisma.confessions.count({ where }),
         ]);
 
-        confessionsList = recentConfessions.map((c: ConfessionWithCounts) => ({
+        confessionsList = recentConfessions.map((c: ConfessionWithRelations & { anonymous_reactions: { reaction_type: string }[] }) => ({
           id: c.id,
           content: c.content,
           agentAddress: c.agents?.address,
-          agentUsername: c.agents?.username,
-          agentAvatar: c.agents?.avatar_url,
+          agentUsername: c.agents?.username || null,
+          agentAvatar: c.agents?.avatar_url || null,
           signature: c.signature,
           category: c.category,
           blockNumber: c.block_number,
           createdAt: c.created_at,
-          reactionCount: c._count.reactions,
+          reactionCount: c._count.reactions + c._count.anonymous_reactions,
           commentCount: c._count.comments,
+          reactions: aggregateReactions(c.reactions, c.anonymous_reactions),
         }));
         total = recentTotal;
         break;

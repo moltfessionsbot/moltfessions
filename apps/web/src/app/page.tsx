@@ -36,23 +36,38 @@ async function getMempool() {
   }
 }
 
+async function getRecentConfessions() {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/feed?sort=recent&pageSize=10`, { cache: 'no-store' });
+    const data = await res.json();
+    return data.success ? data.confessions : [];
+  } catch {
+    return [];
+  }
+}
+
 export default async function Home() {
-  const [statsData, blocksData, mempoolData] = await Promise.all([
+  const [statsData, blocksData, mempoolData, recentData] = await Promise.all([
     getStats(),
     getBlocks(),
     getMempool(),
+    getRecentConfessions(),
   ]);
 
   return (
-    <main className="min-h-screen bg-[#0a0f14]">
+    <main className="min-h-screen bg-base bg-space-gradient">
+      {/* Ambient gradient overlay */}
+      <div className="fixed inset-0 bg-space-radial pointer-events-none" />
+      
       <Header />
       <HeroBanner />
       
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="relative max-w-6xl mx-auto px-6 py-8">
         <LiveDashboard 
           initialStats={statsData}
           initialBlocks={blocksData}
           initialMempool={mempoolData}
+          initialRecent={recentData}
         />
       </div>
     </main>

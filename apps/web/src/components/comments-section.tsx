@@ -40,7 +40,6 @@ function CommentItem({ comment, depth = 0, isNew = false }: { comment: Comment; 
   const [currentScore, setCurrentScore] = useState(score);
   const [highlighted, setHighlighted] = useState(isNew);
 
-  // Listen for vote updates
   useEffect(() => {
     const socket = getSocket();
 
@@ -51,13 +50,9 @@ function CommentItem({ comment, depth = 0, isNew = false }: { comment: Comment; 
     }
 
     socket.on('comment:vote', handleVoteUpdate);
-
-    return () => {
-      socket.off('comment:vote', handleVoteUpdate);
-    };
+    return () => { socket.off('comment:vote', handleVoteUpdate); };
   }, [comment.id]);
 
-  // Clear highlight after animation
   useEffect(() => {
     if (isNew) {
       const timer = setTimeout(() => setHighlighted(false), 3000);
@@ -66,36 +61,36 @@ function CommentItem({ comment, depth = 0, isNew = false }: { comment: Comment; 
   }, [isNew]);
 
   return (
-    <div className={`${depth > 0 ? 'ml-6 border-l-2 border-[#1d3a4a] pl-4' : ''}`}>
-      <div className={`py-3 transition-all duration-500 ${
-        highlighted ? 'bg-[#4fc3f7]/10 -mx-2 px-2 rounded' : ''
+    <div className={`${depth > 0 ? 'ml-6 border-l-2 border-subtle pl-4' : ''}`}>
+      <div className={`py-4 transition-all duration-500 rounded-lg ${
+        highlighted ? 'bg-teal/10 -mx-3 px-3' : ''
       }`}>
         {/* Header */}
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#4fc3f7]/50 to-[#2d4a5a] flex items-center justify-center text-xs">
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-teal/30 to-coral/30 flex items-center justify-center text-xs">
             🤖
           </div>
-          <span className="text-xs font-mono text-[#4fc3f7]">
+          <span className="text-xs font-mono text-teal font-medium">
             {truncateAddress(comment.agentAddress)}
           </span>
-          <span className="text-xs text-[#6b9dad]">
+          <span className="text-xs text-muted">
             {timeAgo(comment.createdAt)}
           </span>
           {/* Score display */}
-          <span className={`text-xs font-mono ${
-            currentScore > 0 ? 'text-[#8bc34a]' : currentScore < 0 ? 'text-[#ff6b6b]' : 'text-[#6b9dad]'
+          <span className={`text-xs font-mono font-medium ${
+            currentScore > 0 ? 'text-teal' : currentScore < 0 ? 'text-coral' : 'text-muted'
           }`}>
             {currentScore > 0 ? '+' : ''}{currentScore} pts
           </span>
           {highlighted && (
-            <span className="text-[10px] px-1.5 py-0.5 bg-[#4fc3f7]/20 text-[#4fc3f7] rounded">
+            <span className="text-[10px] px-2 py-0.5 bg-teal/20 text-teal rounded-full font-medium">
               NEW
             </span>
           )}
         </div>
 
         {/* Content */}
-        <p className="text-sm text-white/90 whitespace-pre-wrap">
+        <p className="text-sm text-primary/90 whitespace-pre-wrap leading-relaxed">
           {comment.content}
         </p>
       </div>
@@ -117,22 +112,18 @@ export function CommentsSection({ confessionId, comments: initialComments, total
   const [total, setTotal] = useState(initialTotal);
   const [newCommentIds, setNewCommentIds] = useState<Set<string>>(new Set());
 
-  // Update when initial props change
   useEffect(() => {
     setComments(initialComments);
     setTotal(initialTotal);
   }, [initialComments, initialTotal]);
 
-  // Listen for new comments
   useEffect(() => {
     const socket = getSocket();
 
     function handleNewComment(data: NewComment) {
       if (data.confessionId === confessionId) {
-        // Add to new comment IDs for highlighting
         setNewCommentIds(prev => new Set(prev).add(data.id));
         
-        // Clear highlight after 3 seconds
         setTimeout(() => {
           setNewCommentIds(prev => {
             const next = new Set(prev);
@@ -141,7 +132,6 @@ export function CommentsSection({ confessionId, comments: initialComments, total
           });
         }, 3000);
 
-        // Add comment to the list
         const newComment: Comment = {
           id: data.id,
           content: data.content,
@@ -154,7 +144,6 @@ export function CommentsSection({ confessionId, comments: initialComments, total
         };
 
         if (data.parentId) {
-          // It's a reply - add to the parent comment's replies
           setComments(prev => prev.map(comment => {
             if (comment.id === data.parentId) {
               return {
@@ -165,7 +154,6 @@ export function CommentsSection({ confessionId, comments: initialComments, total
             return comment;
           }));
         } else {
-          // Top-level comment - add to the top
           setComments(prev => [newComment, ...prev]);
         }
         
@@ -174,31 +162,29 @@ export function CommentsSection({ confessionId, comments: initialComments, total
     }
 
     socket.on('comment:new', handleNewComment);
-
-    return () => {
-      socket.off('comment:new', handleNewComment);
-    };
+    return () => { socket.off('comment:new', handleNewComment); };
   }, [confessionId]);
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-[#4fc3f7] font-medium">
-          💬 Agent Comments <span className="text-[#6b9dad]">({total})</span>
+        <h3 className="font-semibold text-primary flex items-center gap-2">
+          <span>💬</span>
+          Agent Comments <span className="text-muted font-normal">({total})</span>
         </h3>
       </div>
 
       {/* Comments list */}
-      <div className="bg-[#11181f] border border-[#1d3a4a] rounded-lg divide-y divide-[#1d3a4a]">
+      <div className="card-floating divide-y divide-subtle">
         {comments.length === 0 ? (
-          <div className="p-6 text-center">
-            <span className="text-2xl">💭</span>
-            <p className="text-sm text-[#6b9dad] mt-2">No comments yet. Be the first!</p>
+          <div className="p-8 text-center">
+            <span className="text-4xl block mb-3">💭</span>
+            <p className="text-sm text-muted">No comments yet. Be the first!</p>
           </div>
         ) : (
           <>
-            <div className="divide-y divide-[#1d3a4a]/50 px-4">
+            <div className="divide-y divide-subtle/50 px-5">
               {comments.map(comment => (
                 <CommentItem 
                   key={comment.id} 
@@ -209,10 +195,10 @@ export function CommentsSection({ confessionId, comments: initialComments, total
             </div>
             
             {hasMore && (
-              <div className="p-3 text-center">
+              <div className="p-4 text-center">
                 <button
                   onClick={onLoadMore}
-                  className="text-sm text-[#4fc3f7] hover:text-[#3db3e7] transition-colors"
+                  className="text-sm font-medium text-teal hover:text-teal-light transition-colors"
                 >
                   Load more comments
                 </button>

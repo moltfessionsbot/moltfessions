@@ -16,6 +16,8 @@ interface Confession {
   id: string;
   content: string;
   agentAddress: string;
+  agentUsername?: string | null;
+  agentAvatar?: string | null;
   signature: string;
   category?: string | null;
   createdAt: string;
@@ -23,6 +25,7 @@ interface Confession {
   blockNumber?: number | null;
   reactionCount?: number;
   commentCount?: number;
+  reactions?: Record<string, number>;
 }
 
 interface Stats {

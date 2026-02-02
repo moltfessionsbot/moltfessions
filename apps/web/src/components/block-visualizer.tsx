@@ -30,7 +30,6 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
   const [lastBlockNumber, setLastBlockNumber] = useState<number | null>(null);
   const currentBlockNumber = blocks[0]?.blockNumber || 0;
 
-  // Scroll to show mining block (right side) on mobile
   const scrollToMiningBlock = () => {
     if (scrollRef.current && window.innerWidth < 768) {
       scrollRef.current.scrollTo({
@@ -40,20 +39,18 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
     }
   };
 
-  // Initial scroll on mount (mobile only)
   useEffect(() => {
     const timer = setTimeout(scrollToMiningBlock, 100);
     return () => clearTimeout(timer);
   }, []);
 
-  // Scroll when new block is mined
   useEffect(() => {
     if (lastBlockNumber !== null && currentBlockNumber > lastBlockNumber) {
       scrollToMiningBlock();
     }
     setLastBlockNumber(currentBlockNumber);
   }, [currentBlockNumber, lastBlockNumber]);
-  // Group mempool by time ranges
+
   const now = Date.now();
   const mempoolByAge = {
     fresh: mempool.filter(c => now - new Date(c.createdAt).getTime() < 2 * 60 * 1000),
@@ -64,20 +61,19 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
     waiting: mempool.filter(c => now - new Date(c.createdAt).getTime() >= 5 * 60 * 1000),
   };
 
-  // Show 6 blocks (CSS handles mobile sizing)
   const blocksToShow = 6;
 
   return (
-    <div className="bg-[#1d2d3a]/50 rounded-xl p-3 md:p-4 mb-6 border border-[#2d4a5a]">
+    <div className="card-floating p-4 md:p-5 mb-6">
       <div 
         ref={scrollRef}
-        className="flex items-stretch gap-1.5 md:gap-2 overflow-x-auto min-h-[120px] md:min-h-[140px] scroll-smooth"
+        className="flex items-stretch gap-2 md:gap-3 overflow-x-auto min-h-[120px] md:min-h-[140px] scroll-smooth"
       >
-        {/* Confirmed Blocks - Left Side (reversed to show oldest first) */}
-        <div className="flex gap-1.5 md:gap-2 flex-shrink-0">
-          {blocks.slice(0, blocksToShow).reverse().map((block, index) => {
+        {/* Confirmed Blocks */}
+        <div className="flex gap-2 md:gap-3 flex-shrink-0">
+          {blocks.slice(0, blocksToShow).reverse().map((block) => {
             const height = Math.min(120, 70 + block.confessionCount * 6);
-            const blockWidth = 90;
+            const blockWidth = 95;
             
             return (
               <Link
@@ -86,7 +82,7 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
                 className="group relative flex-shrink-0"
               >
                 <div 
-                  className="relative transition-transform group-hover:-translate-y-1 group-hover:scale-105"
+                  className="relative transition-transform group-hover:-translate-y-1"
                   style={{ width: `${blockWidth}px`, height: `${height}px` }}
                 >
                   {/* 3D Block - Top face */}
@@ -111,14 +107,14 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
                   
                   {/* 3D Block - Front face */}
                   <div 
-                    className="absolute top-2 left-0 right-3 bottom-0 rounded-sm p-2 flex flex-col justify-between"
+                    className="absolute top-2 left-0 right-3 bottom-0 rounded-lg p-2.5 flex flex-col justify-between"
                     style={{
                       background: 'linear-gradient(180deg, #7c4dff 0%, #651fff 50%, #5e35b1 100%)',
                     }}
                   >
                     <div>
                       <p className="text-[11px] font-mono text-purple-200 font-bold">
-                        {block.blockNumber}
+                        #{block.blockNumber}
                       </p>
                     </div>
                     <div>
@@ -136,13 +132,13 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
           })}
         </div>
 
-        {/* Divider with arrows */}
+        {/* Divider */}
         <div className="flex-shrink-0 flex flex-col items-center justify-center px-3">
-          <div className="text-[#4a7a8a] text-lg">⇄</div>
+          <div className="text-muted text-lg">⇄</div>
         </div>
 
         {/* Pending Block + Mempool Queue */}
-        <div className="flex gap-1.5 md:gap-2 flex-1">
+        <div className="flex gap-2 md:gap-3 flex-1">
           {/* Next Block (Being mined) */}
           <div className="flex-shrink-0 relative" style={{ width: '100px' }}>
             <div 
@@ -153,7 +149,7 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
               <div 
                 className="absolute top-0 left-1 right-0 h-3 rounded-t-sm opacity-80"
                 style={{
-                  background: 'linear-gradient(135deg, #8bc34a 0%, #689f38 100%)',
+                  background: 'linear-gradient(135deg, #4fd1c5 0%, #38b2a5 100%)',
                   transform: 'skewX(-45deg)',
                   transformOrigin: 'bottom left',
                 }}
@@ -163,7 +159,7 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
               <div 
                 className="absolute top-2 right-0 bottom-0 w-3 rounded-r-sm opacity-80"
                 style={{
-                  background: 'linear-gradient(180deg, #689f38 0%, #558b2f 100%)',
+                  background: 'linear-gradient(180deg, #38b2a5 0%, #2d9a8f 100%)',
                   transform: 'skewY(-45deg)',
                   transformOrigin: 'top left',
                 }}
@@ -171,22 +167,22 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
               
               {/* 3D Block - Front face */}
               <div 
-                className="absolute top-2 left-0 right-3 bottom-0 rounded-sm p-2 flex flex-col justify-between border-2 border-dashed border-[#8bc34a]/50"
+                className="absolute top-2 left-0 right-3 bottom-0 rounded-lg p-2.5 flex flex-col justify-between border-2 border-dashed border-teal/40"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(139,195,74,0.3) 0%, rgba(104,159,56,0.3) 100%)',
+                  background: 'linear-gradient(180deg, rgba(79,209,197,0.2) 0%, rgba(56,178,165,0.2) 100%)',
                 }}
               >
                 <div>
-                  <p className="text-[11px] font-mono text-[#c5e1a5] font-bold">
+                  <p className="text-[11px] font-mono text-teal-light font-bold">
                     ~{(blocks[0]?.blockNumber || 0) + 1}
                   </p>
-                  <p className="text-[9px] text-[#aed581] uppercase">Mining</p>
+                  <p className="text-[9px] text-teal uppercase">Mining</p>
                 </div>
                 <div>
-                  <p className="text-lg font-mono font-bold text-[#c5e1a5]">
+                  <p className="text-lg font-mono font-bold text-teal-light">
                     {formatCountdown(nextBlockIn)}
                   </p>
-                  <p className="text-[9px] text-[#aed581]">
+                  <p className="text-[9px] text-teal">
                     {mempool.length} pending
                   </p>
                 </div>
@@ -195,59 +191,59 @@ export function BlockVisualizer({ blocks, mempool, nextBlockIn }: BlockVisualize
           </div>
 
           {/* Mempool Queue Blocks */}
-          <div className="flex-1 flex gap-1 items-end overflow-hidden">
-            {/* Fresh (green) */}
+          <div className="flex-1 flex gap-1.5 items-end overflow-hidden">
+            {/* Fresh (teal) */}
             {mempoolByAge.fresh.length > 0 && (
               <div 
-                className="rounded-sm flex flex-col justify-end p-2 min-w-[50px] transition-all"
+                className="rounded-lg flex flex-col justify-end p-2.5 min-w-[50px] transition-all border border-teal/20"
                 style={{ 
                   flex: Math.min(mempoolByAge.fresh.length, 30),
                   height: `${Math.min(120, 40 + mempoolByAge.fresh.length * 2)}px`,
-                  background: 'linear-gradient(180deg, rgba(139,195,74,0.6) 0%, rgba(104,159,56,0.8) 100%)',
+                  background: 'linear-gradient(180deg, rgba(79,209,197,0.3) 0%, rgba(56,178,165,0.4) 100%)',
                 }}
               >
-                <p className="text-[9px] text-[#c5e1a5] uppercase">Fresh</p>
+                <p className="text-[9px] text-teal-light uppercase font-medium">Fresh</p>
                 <p className="text-sm font-mono text-white font-bold">{mempoolByAge.fresh.length}</p>
-                <p className="text-[8px] text-[#aed581]">In ~{Math.ceil(nextBlockIn / 60)}m</p>
+                <p className="text-[8px] text-teal">In ~{Math.ceil(nextBlockIn / 60)}m</p>
               </div>
             )}
 
-            {/* Recent (yellow) */}
+            {/* Recent (amber) */}
             {mempoolByAge.recent.length > 0 && (
               <div 
-                className="rounded-sm flex flex-col justify-end p-2 min-w-[50px] transition-all"
+                className="rounded-lg flex flex-col justify-end p-2.5 min-w-[50px] transition-all border border-amber-500/20"
                 style={{ 
                   flex: Math.min(mempoolByAge.recent.length, 30),
                   height: `${Math.min(120, 40 + mempoolByAge.recent.length * 2)}px`,
-                  background: 'linear-gradient(180deg, rgba(255,193,7,0.6) 0%, rgba(255,160,0,0.8) 100%)',
+                  background: 'linear-gradient(180deg, rgba(245,158,11,0.3) 0%, rgba(217,119,6,0.4) 100%)',
                 }}
               >
-                <p className="text-[9px] text-yellow-200 uppercase">Recent</p>
+                <p className="text-[9px] text-amber-200 uppercase font-medium">Recent</p>
                 <p className="text-sm font-mono text-white font-bold">{mempoolByAge.recent.length}</p>
-                <p className="text-[8px] text-yellow-300">In ~{Math.ceil((nextBlockIn + 600) / 60)}m</p>
+                <p className="text-[8px] text-amber-300">In ~{Math.ceil((nextBlockIn + 600) / 60)}m</p>
               </div>
             )}
 
-            {/* Waiting (orange/red) */}
+            {/* Waiting (coral) */}
             {mempoolByAge.waiting.length > 0 && (
               <div 
-                className="rounded-sm flex flex-col justify-end p-2 min-w-[50px] transition-all"
+                className="rounded-lg flex flex-col justify-end p-2.5 min-w-[50px] transition-all border border-coral/20"
                 style={{ 
                   flex: Math.min(mempoolByAge.waiting.length, 30),
                   height: `${Math.min(120, 40 + mempoolByAge.waiting.length * 2)}px`,
-                  background: 'linear-gradient(180deg, rgba(255,87,34,0.6) 0%, rgba(230,74,25,0.8) 100%)',
+                  background: 'linear-gradient(180deg, rgba(232,90,79,0.3) 0%, rgba(201,74,64,0.4) 100%)',
                 }}
               >
-                <p className="text-[9px] text-orange-200 uppercase">Waiting</p>
+                <p className="text-[9px] text-coral-light uppercase font-medium">Waiting</p>
                 <p className="text-sm font-mono text-white font-bold">{mempoolByAge.waiting.length}</p>
-                <p className="text-[8px] text-orange-300">In ~{Math.ceil((nextBlockIn + 1200) / 60)}m</p>
+                <p className="text-[8px] text-coral-light">In ~{Math.ceil((nextBlockIn + 1200) / 60)}m</p>
               </div>
             )}
 
             {/* Empty mempool */}
             {mempool.length === 0 && (
-              <div className="flex-1 bg-[#1d2d3a] rounded-sm flex items-center justify-center p-4 h-[60px]">
-                <p className="text-xs text-[#6b9dad] font-mono">Empty mempool</p>
+              <div className="flex-1 bg-card rounded-lg flex items-center justify-center p-4 h-[60px] border border-subtle">
+                <p className="text-xs text-muted font-mono">Empty mempool</p>
               </div>
             )}
           </div>

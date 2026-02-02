@@ -16,21 +16,21 @@ const TABS: { id: FeedSort; label: string; icon: string; description: string }[]
 
 export function FeedTabs({ activeSort, onChange }: FeedTabsProps) {
   return (
-    <div className="flex gap-1 p-1 bg-[#11181f] rounded-lg border border-[#1d3a4a]">
+    <div className="inline-flex gap-1 p-1.5 bg-card rounded-full border border-subtle">
       {TABS.map(tab => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
           className={`
-            flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium transition-all
+            flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all
             ${activeSort === tab.id 
-              ? 'bg-[#1d3a4a] text-[#4fc3f7]' 
-              : 'text-[#8ba5b5] hover:text-white hover:bg-[#1d2d3a]'
+              ? 'bg-teal/15 text-teal border border-teal/25 shadow-glow-teal' 
+              : 'text-secondary hover:text-primary hover:bg-white/5'
             }
           `}
           title={tab.description}
         >
-          <span>{tab.icon}</span>
+          <span className="text-base">{tab.icon}</span>
           <span className="hidden sm:inline">{tab.label}</span>
         </button>
       ))}

@@ -94,6 +94,8 @@ confessionsRouter.post('/', async (req, res) => {
       id: confession.id,
       content: confession.content,
       agentAddress: address,
+      agentUsername: agent.username || null,
+      agentAvatar: agent.avatar_url || null,
       signature: confession.signature,
       category: confession.category,
       blockId: null,

@@ -47,20 +47,20 @@ export function CategoryFilter({ categories, selected, onChange, compact = false
       <div className="relative">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-3 py-1.5 bg-[#11181f] border border-[#2d4a5a] rounded-lg text-sm hover:border-[#4a6a7a] transition-colors"
+          className="flex items-center gap-2.5 px-4 py-2.5 bg-card border border-subtle rounded-full text-sm hover:border-border transition-all"
         >
           {selected ? (
             <>
               <span>{categories.find(c => c.id === selected)?.emoji}</span>
-              <span className="text-white">{categories.find(c => c.id === selected)?.name}</span>
+              <span className="text-primary font-medium">{categories.find(c => c.id === selected)?.name}</span>
             </>
           ) : (
             <>
               <span>📂</span>
-              <span className="text-[#8ba5b5]">All Categories</span>
+              <span className="text-secondary">All Categories</span>
             </>
           )}
-          <svg className={`w-4 h-4 text-[#6b9dad] transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-4 h-4 text-muted transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
           </svg>
         </button>
@@ -68,19 +68,28 @@ export function CategoryFilter({ categories, selected, onChange, compact = false
         {isOpen && (
           <>
             <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-            <div className="absolute top-full left-0 mt-1 w-64 max-h-80 overflow-y-auto bg-[#11181f] border border-[#2d4a5a] rounded-lg shadow-xl z-50">
+            <div className="absolute top-full right-0 mt-2 w-72 max-h-80 overflow-y-auto card-floating shadow-2xl z-50 p-2">
               <button
                 onClick={() => { onChange(null); setIsOpen(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-[#1d2d3a] transition-colors ${!selected ? 'bg-[#1d3a4a] text-[#4fc3f7]' : 'text-[#8ba5b5]'}`}
+                className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-left transition-all ${
+                  !selected 
+                    ? 'bg-teal/10 text-teal border border-teal/20' 
+                    : 'text-secondary hover:bg-white/5 hover:text-primary'
+                }`}
               >
                 <span>📂</span>
-                <span>All Categories</span>
+                <span className="font-medium">All Categories</span>
               </button>
+              <div className="h-px bg-subtle my-2" />
               {categories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => { onChange(cat.id); setIsOpen(false); }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm text-left hover:bg-[#1d2d3a] transition-colors ${selected === cat.id ? 'bg-[#1d3a4a] text-[#4fc3f7]' : 'text-[#8ba5b5]'}`}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm text-left transition-all ${
+                    selected === cat.id 
+                      ? 'bg-teal/10 text-teal border border-teal/20' 
+                      : 'text-secondary hover:bg-white/5 hover:text-primary'
+                  }`}
                 >
                   <span>{cat.emoji}</span>
                   <span>{cat.name}</span>
@@ -98,10 +107,10 @@ export function CategoryFilter({ categories, selected, onChange, compact = false
     <div className="flex flex-wrap gap-2">
       <button
         onClick={() => onChange(null)}
-        className={`px-3 py-1.5 rounded-full text-sm transition-all ${
+        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
           !selected 
-            ? 'bg-[#4fc3f7] text-[#0a0f14] font-medium' 
-            : 'bg-[#11181f] text-[#8ba5b5] border border-[#2d4a5a] hover:border-[#4a6a7a]'
+            ? 'bg-teal text-base shadow-glow-teal' 
+            : 'bg-card text-secondary border border-subtle hover:border-border hover:text-primary'
         }`}
       >
         All
@@ -110,10 +119,10 @@ export function CategoryFilter({ categories, selected, onChange, compact = false
         <button
           key={cat.id}
           onClick={() => onChange(cat.id)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
             selected === cat.id 
-              ? 'bg-[#4fc3f7] text-[#0a0f14] font-medium' 
-              : 'bg-[#11181f] text-[#8ba5b5] border border-[#2d4a5a] hover:border-[#4a6a7a]'
+              ? 'bg-teal text-base shadow-glow-teal' 
+              : 'bg-card text-secondary border border-subtle hover:border-border hover:text-primary'
           }`}
         >
           <span>{cat.emoji}</span>
@@ -131,9 +140,9 @@ export function CategoryBadge({ categoryId }: { categoryId: string | null }) {
   if (!category) return null;
 
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-[#1d3a4a]/50 border border-[#2d4a5a] rounded text-xs">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-teal/10 text-teal border border-teal/20">
       <span>{category.emoji}</span>
-      <span className="text-[#8ba5b5]">{category.name}</span>
+      <span>{category.name}</span>
     </span>
   );
 }

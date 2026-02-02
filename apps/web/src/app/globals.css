@@ -3,54 +3,233 @@
 @tailwind utilities;
 
 :root {
-  --background: #11181f;
-  --surface: #1d2d3a;
-  --accent: #4fc3f7;
-  --confirmed: #4ecca3;
-  --pending: #ffc107;
-  --border: #2d4a5a;
-  --muted: #6b9dad;
+  /* Core palette - dark first, space-like */
+  --bg-base: #0a0a0f;
+  --bg-elevated: #0f1015;
+  --bg-card: rgba(15, 16, 22, 0.8);
+  --bg-card-hover: rgba(20, 22, 30, 0.9);
+  
+  /* Accent colors */
+  --accent-coral: #e85a4f;
+  --accent-coral-muted: #c94a40;
+  --accent-teal: #4fd1c5;
+  --accent-teal-muted: #38b2a5;
+  
+  /* Text */
+  --text-primary: #e8e8ed;
+  --text-secondary: #9898a8;
+  --text-muted: #5a5a6e;
+  
+  /* Borders & surfaces */
+  --border-subtle: rgba(88, 88, 110, 0.2);
+  --border-default: rgba(88, 88, 110, 0.35);
+  --border-accent: rgba(232, 90, 79, 0.3);
+  
+  /* Glow effects */
+  --glow-coral: 0 0 30px rgba(232, 90, 79, 0.15);
+  --glow-teal: 0 0 30px rgba(79, 209, 197, 0.15);
+  --glow-card: 0 4px 30px rgba(0, 0, 0, 0.4);
+}
+
+html {
+  background: var(--bg-base);
 }
 
 body {
-  background: var(--background);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
-/* Custom scrollbar - mempool style */
+/* Gradient backgrounds */
+.bg-space-gradient {
+  background: linear-gradient(
+    135deg,
+    #0a0a0f 0%,
+    #0d0d18 25%,
+    #12101f 50%,
+    #150d1a 75%,
+    #0a0a0f 100%
+  );
+}
+
+.bg-space-radial {
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    rgba(79, 209, 197, 0.05) 0%,
+    rgba(139, 92, 246, 0.03) 40%,
+    transparent 70%
+  );
+}
+
+/* Card styles */
+.card-floating {
+  background: var(--bg-card);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  box-shadow: var(--glow-card);
+  transition: all 0.25s ease;
+}
+
+.card-floating:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-default);
+  box-shadow: var(--glow-card), 0 0 40px rgba(79, 209, 197, 0.05);
+}
+
+/* Button styles */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-coral), var(--accent-coral-muted));
+  color: white;
+  padding: 0.625rem 1.25rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.1);
+  box-shadow: var(--glow-coral);
+}
+
+.btn-secondary {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--accent-teal);
+  color: var(--accent-teal);
+}
+
+/* Pill / tab styles */
+.pill {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid transparent;
+}
+
+.pill:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pill-active {
+  background: rgba(79, 209, 197, 0.1);
+  color: var(--accent-teal);
+  border-color: rgba(79, 209, 197, 0.3);
+}
+
+/* Badge styles */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(232, 90, 79, 0.15);
+  color: var(--accent-coral);
+  border: 1px solid rgba(232, 90, 79, 0.25);
+}
+
+.badge-teal {
+  background: rgba(79, 209, 197, 0.15);
+  color: var(--accent-teal);
+  border-color: rgba(79, 209, 197, 0.25);
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--background);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--surface);
-  border-radius: 4px;
+  background: var(--border-default);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border);
+  background: var(--text-muted);
 }
 
-/* Block animation */
-@keyframes pulse-pending {
+/* Animations */
+@keyframes pulse-soft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50% { opacity: 0.6; }
 }
 
-.animate-pending {
-  animation: pulse-pending 2s ease-in-out infinite;
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 15px rgba(79, 209, 197, 0.3); }
+  50% { box-shadow: 0 0 25px rgba(79, 209, 197, 0.5); }
 }
 
-/* Glow effect for live indicator */
-@keyframes glow {
-  0%, 100% { box-shadow: 0 0 5px var(--confirmed); }
-  50% { box-shadow: 0 0 20px var(--confirmed); }
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
 }
 
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Text gradient */
+.text-gradient-coral {
+  background: linear-gradient(135deg, var(--accent-coral), #f07167);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-teal {
+  background: linear-gradient(135deg, var(--accent-teal), #81e6d9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Live indicator dot */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  box-shadow: 0 0 10px var(--accent-teal);
+}
+
+.live-dot::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: var(--accent-teal);
+  opacity: 0.3;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }

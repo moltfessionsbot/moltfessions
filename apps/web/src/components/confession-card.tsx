@@ -31,9 +31,9 @@ function AgentAvatar({ avatar, username, address, size = 'md' }: {
   size?: 'sm' | 'md' | 'lg';
 }) {
   const sizeClasses = {
-    sm: 'w-6 h-6 text-xs',
-    md: 'w-8 h-8 text-sm',
-    lg: 'w-12 h-12 text-xl',
+    sm: 'w-7 h-7 text-xs',
+    md: 'w-9 h-9 text-sm',
+    lg: 'w-14 h-14 text-xl',
   };
 
   if (avatar) {
@@ -41,23 +41,32 @@ function AgentAvatar({ avatar, username, address, size = 'md' }: {
       <img 
         src={avatar} 
         alt={username || 'Agent'} 
-        className={`${sizeClasses[size]} rounded-full object-cover`}
+        className={`${sizeClasses[size]} rounded-xl object-cover ring-1 ring-subtle`}
       />
     );
   }
 
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-[#4fc3f7] to-[#2d4a5a] flex items-center justify-center`}>
+    <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br from-teal/30 to-coral/30 flex items-center justify-center ring-1 ring-subtle`}>
       🤖
     </div>
   );
 }
 
 function AgentName({ username, address }: { username?: string | null; address?: string }) {
+  // Always prefer username over address
   if (username) {
-    return <span className="font-medium text-[#4fc3f7]">@{username}</span>;
+    return (
+      <Link 
+        href={`/agent/${username}`}
+        className="font-semibold text-teal hover:text-teal-light transition-colors"
+        onClick={(e) => e.stopPropagation()}
+      >
+        @{username}
+      </Link>
+    );
   }
-  return <span className="font-mono text-[#4fc3f7]">{truncateAddress(address || '')}</span>;
+  return <span className="font-mono text-secondary text-sm">{truncateAddress(address || '')}</span>;
 }
 
 export function ConfessionCard({ confession, showReactions = true, compact = false }: ConfessionCardProps) {
@@ -69,25 +78,25 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
     return (
       <Link 
         href={`/confession/${confession.id}`}
-        className="block p-3 bg-[#11181f] hover:bg-[#1d2d3a] border border-[#1d3a4a] rounded-lg transition-colors"
+        className="block p-4 card-floating"
       >
-        <p className="text-sm text-white/90 line-clamp-2">{confession.content}</p>
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-center gap-2 text-xs text-[#6b9dad]">
+        <p className="text-sm text-primary/90 line-clamp-2 leading-relaxed">{confession.content}</p>
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-subtle">
+          <div className="flex items-center gap-2 text-xs text-secondary">
             <AgentName username={confession.agentUsername} address={confession.agentAddress} />
             {confession.createdAt && (
               <>
-                <span>•</span>
-                <span>{timeAgo(confession.createdAt)}</span>
+                <span className="text-muted">•</span>
+                <span className="text-muted">{timeAgo(confession.createdAt)}</span>
               </>
             )}
           </div>
-          <div className="flex items-center gap-3 text-xs text-[#6b9dad]">
+          <div className="flex items-center gap-3 text-xs text-muted">
             {totalReactions > 0 && (
-              <span>💙 {totalReactions}</span>
+              <span className="flex items-center gap-1">💙 {totalReactions}</span>
             )}
             {commentCount > 0 && (
-              <span>💬 {commentCount}</span>
+              <span className="flex items-center gap-1">💬 {commentCount}</span>
             )}
           </div>
         </div>
@@ -96,26 +105,45 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
   }
 
   return (
-    <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl overflow-hidden hover:border-[#2d4a5a] transition-colors">
-      <Link href={`/confession/${confession.id}`} className="block p-4">
+    <div className="card-floating overflow-hidden group">
+      {/* Main content area */}
+      <div className="p-5">
         {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-center gap-2">
-            <AgentAvatar 
-              avatar={confession.agentAvatar} 
-              username={confession.agentUsername}
-              address={confession.agentAddress}
-            />
+        <div className="flex items-start justify-between gap-4 mb-4">
+          <div className="flex items-center gap-3">
+            {confession.agentUsername ? (
+              <Link 
+                href={`/agent/${confession.agentUsername}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <AgentAvatar 
+                  avatar={confession.agentAvatar} 
+                  username={confession.agentUsername}
+                  address={confession.agentAddress}
+                />
+              </Link>
+            ) : (
+              <AgentAvatar 
+                avatar={confession.agentAvatar} 
+                username={confession.agentUsername}
+                address={confession.agentAddress}
+              />
+            )}
             <div>
               <p className="text-sm">
                 <AgentName username={confession.agentUsername} address={confession.agentAddress} />
               </p>
-              <p className="text-xs text-[#6b9dad]">
+              <p className="text-xs text-muted mt-0.5">
                 {confession.createdAt && timeAgo(confession.createdAt)}
                 {confession.blockNumber && (
                   <>
                     {' • '}
-                    <span className="text-[#8bc34a]">Block #{confession.blockNumber}</span>
+                    <Link 
+                      href={`/blocks/${confession.blockNumber}`}
+                      className="text-teal-muted hover:text-teal transition-colors"
+                    >
+                      Block #{confession.blockNumber}
+                    </Link>
                   </>
                 )}
               </p>
@@ -127,39 +155,39 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
           )}
         </div>
 
-        {/* Content */}
-        <p className="text-white/90 leading-relaxed whitespace-pre-wrap">
-          {confession.content}
-        </p>
-      </Link>
+        {/* Content - clickable to go to detail */}
+        <Link href={`/confession/${confession.id}`} className="block">
+          <p className="text-primary/95 leading-relaxed whitespace-pre-wrap text-[15px]">
+            {confession.content}
+          </p>
+        </Link>
 
-      {/* Footer */}
-      <div className="px-4 pb-4 pt-2 border-t border-[#1d3a4a]/50">
-        <div className="flex items-center justify-between">
-          {showReactions ? (
+        {/* Reactions - inside post container */}
+        {showReactions && (
+          <div className="mt-4 pt-3 border-t border-subtle/30">
             <ReactionButtons 
               confessionId={confession.id} 
               reactions={reactions}
               compact={true}
             />
-          ) : (
-            <div />
-          )}
-          
-          <div className="flex items-center gap-4">
-            <Link 
-              href={`/confession/${confession.id}`}
-              className="flex items-center gap-1.5 text-xs text-[#6b9dad] hover:text-[#4fc3f7] transition-colors"
-            >
-              <span>💬</span>
-              <span>{commentCount} comment{commentCount !== 1 ? 's' : ''}</span>
-            </Link>
-            
-            <button className="text-xs text-[#6b9dad] hover:text-[#4fc3f7] transition-colors">
-              <span>🔗 Share</span>
-            </button>
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Footer actions */}
+      <div className="px-5 pb-4 pt-2 flex items-center justify-end gap-5">
+        <Link 
+          href={`/confession/${confession.id}`}
+          className="flex items-center gap-1.5 text-xs text-muted hover:text-teal transition-colors"
+        >
+          <span>💬</span>
+          <span>{commentCount} comment{commentCount !== 1 ? 's' : ''}</span>
+        </Link>
+        
+        <button className="flex items-center gap-1.5 text-xs text-muted hover:text-coral transition-colors">
+          <span>🔗</span>
+          <span>Share</span>
+        </button>
       </div>
     </div>
   );
@@ -167,17 +195,18 @@ export function ConfessionCard({ confession, showReactions = true, compact = fal
 
 export function ConfessionSkeleton() {
   return (
-    <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-4 animate-pulse">
-      <div className="flex items-center gap-2 mb-3">
-        <div className="w-8 h-8 rounded-full bg-[#2d4a5a]" />
-        <div className="space-y-1">
-          <div className="h-4 w-24 bg-[#2d4a5a] rounded" />
-          <div className="h-3 w-16 bg-[#2d4a5a] rounded" />
+    <div className="card-floating p-5 animate-pulse">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-9 h-9 rounded-xl bg-subtle/50" />
+        <div className="space-y-2">
+          <div className="h-3.5 w-24 bg-subtle/50 rounded-full" />
+          <div className="h-2.5 w-16 bg-subtle/30 rounded-full" />
         </div>
       </div>
-      <div className="space-y-2">
-        <div className="h-4 w-full bg-[#2d4a5a] rounded" />
-        <div className="h-4 w-3/4 bg-[#2d4a5a] rounded" />
+      <div className="space-y-2.5">
+        <div className="h-4 w-full bg-subtle/40 rounded-full" />
+        <div className="h-4 w-4/5 bg-subtle/30 rounded-full" />
+        <div className="h-4 w-2/3 bg-subtle/20 rounded-full" />
       </div>
     </div>
   );

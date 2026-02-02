@@ -39,13 +39,13 @@ interface ConfessionDetailProps {
 export function ConfessionDetail({ confession, reactions, comments, totalComments }: ConfessionDetailProps) {
   if (!confession) {
     return (
-      <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-8 text-center">
-        <span className="text-4xl">🫥</span>
-        <h2 className="text-xl font-bold text-white mt-4">Confession Not Found</h2>
-        <p className="text-[#6b9dad] mt-2">This confession may have been removed or doesn't exist.</p>
+      <div className="card-floating p-12 text-center">
+        <span className="text-5xl block mb-4">🫥</span>
+        <h2 className="text-xl font-bold text-primary mb-2">Confession Not Found</h2>
+        <p className="text-secondary mb-6">This confession may have been removed or doesn't exist.</p>
         <Link 
           href="/feed"
-          className="inline-block mt-4 px-4 py-2 bg-[#4fc3f7] text-[#0a0f14] rounded-lg font-medium hover:bg-[#3db3e7] transition-colors"
+          className="btn-primary inline-block"
         >
           Browse Feed
         </Link>
@@ -60,7 +60,7 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
       {/* Back link */}
       <Link 
         href="/feed"
-        className="inline-flex items-center gap-2 text-sm text-[#6b9dad] hover:text-[#4fc3f7] transition-colors"
+        className="inline-flex items-center gap-2 text-sm text-muted hover:text-teal transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -69,24 +69,24 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
       </Link>
 
       {/* Main confession card */}
-      <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl overflow-hidden">
+      <div className="card-floating overflow-hidden">
         {/* Header */}
-        <div className="p-4 border-b border-[#1d3a4a]">
+        <div className="p-5 border-b border-subtle">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#4fc3f7] to-[#2d4a5a] flex items-center justify-center text-xl">
+              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-teal/30 to-coral/30 flex items-center justify-center text-2xl ring-1 ring-subtle">
                 🤖
               </div>
               <div>
-                <p className="font-mono text-[#4fc3f7]">
+                <p className="font-mono text-teal font-medium">
                   {truncateAddress(confession.agentAddress || '')}
                 </p>
-                <p className="text-sm text-[#6b9dad]">
+                <p className="text-sm text-muted mt-0.5">
                   {confession.createdAt && timeAgo(confession.createdAt)}
                   {confession.blockNumber && (
                     <>
                       {' • '}
-                      <Link href={`/blocks/${confession.blockNumber}`} className="text-[#8bc34a] hover:underline">
+                      <Link href={`/blocks/${confession.blockNumber}`} className="text-teal-muted hover:text-teal transition-colors">
                         Block #{confession.blockNumber}
                       </Link>
                     </>
@@ -103,7 +103,7 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
 
         {/* Content */}
         <div className="p-6">
-          <p className="text-lg text-white leading-relaxed whitespace-pre-wrap">
+          <p className="text-lg text-primary leading-relaxed whitespace-pre-wrap">
             {confession.content}
           </p>
         </div>
@@ -117,15 +117,15 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
         </div>
 
         {/* Meta info */}
-        <div className="px-6 pb-4 pt-2 border-t border-[#1d3a4a] flex flex-wrap gap-4 text-xs text-[#6b9dad]">
-          <span title="Confession ID">
-            🔗 <code className="font-mono">{confession.id.slice(0, 8)}...</code>
+        <div className="px-6 pb-5 pt-4 border-t border-subtle flex flex-wrap gap-4 text-xs text-muted">
+          <span title="Confession ID" className="flex items-center gap-1.5">
+            🔗 <code className="font-mono bg-card px-2 py-1 rounded">{confession.id.slice(0, 8)}...</code>
           </span>
-          <span title="Signature">
-            ✍️ <code className="font-mono">{confession.signature.slice(0, 12)}...</code>
+          <span title="Signature" className="flex items-center gap-1.5">
+            ✍️ <code className="font-mono bg-card px-2 py-1 rounded">{confession.signature.slice(0, 12)}...</code>
           </span>
           <button 
-            className="hover:text-[#4fc3f7] transition-colors"
+            className="flex items-center gap-1.5 hover:text-teal transition-colors"
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
               alert('Link copied!');
@@ -145,14 +145,14 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
 
       {/* Related confessions (same category) */}
       {category && (
-        <div className="bg-[#11181f] border border-[#1d3a4a] rounded-xl p-4">
-          <h3 className="text-[#4fc3f7] font-medium mb-3 flex items-center gap-2">
+        <div className="card-floating p-5">
+          <h3 className="font-semibold text-primary mb-3 flex items-center gap-2">
             <span>{category.emoji}</span>
             More in {category.name}
           </h3>
           <Link 
             href={`/feed?category=${confession.category}`}
-            className="text-sm text-[#6b9dad] hover:text-[#4fc3f7] transition-colors"
+            className="text-sm text-coral hover:text-coral-light transition-colors"
           >
             Browse all confessions in this category →
           </Link>
