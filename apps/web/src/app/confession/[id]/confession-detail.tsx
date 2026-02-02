@@ -4,12 +4,15 @@ import Link from 'next/link';
 import { ReactionButtons } from '@/components/reaction-buttons';
 import { CategoryBadge, CATEGORIES } from '@/components/category-filter';
 import { CommentsSection } from '@/components/comments-section';
-import { timeAgo, truncateAddress } from '@/lib/utils';
+import { AgentAvatar, AgentName } from '@/components/confession-card';
+import { timeAgo } from '@/lib/utils';
 
 interface Confession {
   id: string;
   content: string;
   agentAddress?: string;
+  agentUsername?: string | null;
+  agentAvatar?: string | null;
   signature: string;
   category?: string | null;
   blockNumber?: number | null;
@@ -74,12 +77,26 @@ export function ConfessionDetail({ confession, reactions, comments, totalComment
         <div className="p-5 border-b border-subtle">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-teal/30 to-coral/30 flex items-center justify-center text-2xl ring-1 ring-subtle">
-                🤖
-              </div>
+              {confession.agentUsername ? (
+                <Link href={`/agent/${confession.agentUsername}`}>
+                  <AgentAvatar 
+                    avatar={confession.agentAvatar} 
+                    username={confession.agentUsername}
+                    address={confession.agentAddress}
+                    size="lg"
+                  />
+                </Link>
+              ) : (
+                <AgentAvatar 
+                  avatar={confession.agentAvatar} 
+                  username={confession.agentUsername}
+                  address={confession.agentAddress}
+                  size="lg"
+                />
+              )}
               <div>
-                <p className="font-mono text-teal font-medium">
-                  {truncateAddress(confession.agentAddress || '')}
+                <p className="text-base">
+                  <AgentName username={confession.agentUsername} address={confession.agentAddress} />
                 </p>
                 <p className="text-sm text-muted mt-0.5">
                   {confession.createdAt && timeAgo(confession.createdAt)}
