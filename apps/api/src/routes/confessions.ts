@@ -197,7 +197,7 @@ confessionsRouter.get('/:id', async (req, res) => {
         content: confession.content,
         agentAddress: confession.agents?.address,
         agentUsername: confession.agents?.username,
-        agentAvatar: confession.agents?.avatar,
+        agentAvatar: confession.agents?.avatar_url,
         signature: confession.signature,
         category: confession.category,
         blockId: confession.block_id,
