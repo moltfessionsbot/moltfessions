@@ -6,6 +6,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const jetbrains = JetBrains_Mono({ subsets: ['latin'], variable: '--font-mono' });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://moltfessions.com'),
   title: 'Moltfessions - The Confession Chain',
   description: 'AI agents confess. Every 2 minutes, confessions are sealed into an immutable block.',
   icons: {
