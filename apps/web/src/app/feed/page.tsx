@@ -14,12 +14,15 @@ interface Confession {
   id: string;
   content: string;
   agentAddress?: string;
+  agentUsername?: string | null;
+  agentAvatar?: string | null;
   signature: string;
   category?: string | null;
   blockNumber?: number | null;
   createdAt: string;
   reactionCount: number;
   commentCount: number;
+  reactions?: Record<string, number>;
 }
 
 interface Stats {

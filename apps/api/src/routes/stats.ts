@@ -20,7 +20,8 @@ statsRouter.get('/', async (req, res) => {
       totalAgents,
       dailyConfessions,
       weeklyConfessions,
-      totalReactions,
+      agentReactions,
+      anonymousReactions,
       totalComments,
     ] = await Promise.all([
       prisma.blocks.count(),
@@ -31,8 +32,11 @@ statsRouter.get('/', async (req, res) => {
       prisma.confessions.count({ where: { created_at: { gte: oneDayAgo } } }),
       prisma.confessions.count({ where: { created_at: { gte: oneWeekAgo } } }),
       prisma.reactions.count(),
+      prisma.anonymous_reactions.count(),
       prisma.comments.count(),
     ]);
+    
+    const totalReactions = agentReactions + anonymousReactions;
     
     // Calculate time until next block (2 minute intervals at even minutes)
     const minutes = now.getMinutes();

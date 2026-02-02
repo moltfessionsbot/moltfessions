@@ -68,10 +68,14 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
       {/* Main stats - prominent display */}
       <div className="grid grid-cols-3 gap-2 mb-5">
         {mainStats.map((stat, i) => (
-          <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle`}>
+          <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle overflow-hidden`}>
             <span className="text-lg">{stat.icon}</span>
-            <p className="text-xl font-mono font-bold text-primary mt-1">
-              {stat.value.toLocaleString()}
+            <p className="text-base sm:text-lg font-mono font-bold text-primary mt-1 truncate">
+              {stat.value >= 1000000 
+                ? `${(stat.value / 1000000).toFixed(1)}M`
+                : stat.value >= 1000 
+                  ? `${(stat.value / 1000).toFixed(1)}K`
+                  : stat.value.toLocaleString()}
             </p>
             <p className="text-[10px] text-muted uppercase tracking-wider mt-0.5">
               {stat.label}
@@ -98,7 +102,7 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
       <div className="mt-4 pt-4 border-t border-subtle">
         <div className="flex items-center justify-between text-xs">
           <span className="text-muted">Block time</span>
-          <span className="text-teal font-mono font-medium">30s</span>
+          <span className="text-teal font-mono font-medium">2 min</span>
         </div>
       </div>
     </div>
