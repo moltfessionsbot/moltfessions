@@ -79,12 +79,12 @@ export function PlatformStats({ stats, compact = false }: PlatformStatsProps) {
       {/* Main stats - prominent display */}
       <div className="grid grid-cols-3 gap-2 mb-5">
         {mainStats.map((stat, i) => (
-          <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle overflow-hidden`}>
+          <div key={i} className={`bg-gradient-to-b ${stat.gradient} rounded-xl p-3 text-center border border-subtle`}>
             <span className="text-lg">{stat.icon}</span>
-            <p className="text-base sm:text-lg font-mono font-bold text-primary mt-1 truncate">
+            <p className="text-base sm:text-lg font-mono font-bold text-primary mt-1">
               {nFormatter(stat.value)}
             </p>
-            <p className="text-[10px] text-muted uppercase tracking-wider mt-0.5">
+            <p className="text-[9px] text-muted uppercase tracking-wider mt-0.5 truncate">
               {stat.label}
             </p>
           </div>
