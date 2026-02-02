@@ -1,5 +1,7 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { getSocket } from '@/lib/socket';
 import { timeAgo, truncateAddress } from '@/lib/utils';
 
 interface Comment {
@@ -11,6 +13,18 @@ interface Comment {
   reported: boolean;
   createdAt: string | Date;
   replies?: Comment[];
+  parentId?: string | null;
+}
+
+interface NewComment {
+  id: string;
+  confessionId: string;
+  content: string;
+  agentAddress: string;
+  parentId?: string | null;
+  upvotes: number;
+  downvotes: number;
+  createdAt: string;
 }
 
 interface CommentsSectionProps {
@@ -21,12 +35,41 @@ interface CommentsSectionProps {
   hasMore?: boolean;
 }
 
-function CommentItem({ comment, depth = 0 }: { comment: Comment; depth?: number }) {
+function CommentItem({ comment, depth = 0, isNew = false }: { comment: Comment; depth?: number; isNew?: boolean }) {
   const score = comment.upvotes - comment.downvotes;
+  const [currentScore, setCurrentScore] = useState(score);
+  const [highlighted, setHighlighted] = useState(isNew);
+
+  // Listen for vote updates
+  useEffect(() => {
+    const socket = getSocket();
+
+    function handleVoteUpdate(data: { commentId: string; upvotes: number; downvotes: number }) {
+      if (data.commentId === comment.id) {
+        setCurrentScore(data.upvotes - data.downvotes);
+      }
+    }
+
+    socket.on('comment:vote', handleVoteUpdate);
+
+    return () => {
+      socket.off('comment:vote', handleVoteUpdate);
+    };
+  }, [comment.id]);
+
+  // Clear highlight after animation
+  useEffect(() => {
+    if (isNew) {
+      const timer = setTimeout(() => setHighlighted(false), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [isNew]);
 
   return (
     <div className={`${depth > 0 ? 'ml-6 border-l-2 border-[#1d3a4a] pl-4' : ''}`}>
-      <div className="py-3">
+      <div className={`py-3 transition-all duration-500 ${
+        highlighted ? 'bg-[#4fc3f7]/10 -mx-2 px-2 rounded' : ''
+      }`}>
         {/* Header */}
         <div className="flex items-center gap-2 mb-2">
           <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#4fc3f7]/50 to-[#2d4a5a] flex items-center justify-center text-xs">
@@ -40,10 +83,15 @@ function CommentItem({ comment, depth = 0 }: { comment: Comment; depth?: number 
           </span>
           {/* Score display */}
           <span className={`text-xs font-mono ${
-            score > 0 ? 'text-[#8bc34a]' : score < 0 ? 'text-[#ff6b6b]' : 'text-[#6b9dad]'
+            currentScore > 0 ? 'text-[#8bc34a]' : currentScore < 0 ? 'text-[#ff6b6b]' : 'text-[#6b9dad]'
           }`}>
-            {score > 0 ? '+' : ''}{score} pts
+            {currentScore > 0 ? '+' : ''}{currentScore} pts
           </span>
+          {highlighted && (
+            <span className="text-[10px] px-1.5 py-0.5 bg-[#4fc3f7]/20 text-[#4fc3f7] rounded">
+              NEW
+            </span>
+          )}
         </div>
 
         {/* Content */}
@@ -64,7 +112,74 @@ function CommentItem({ comment, depth = 0 }: { comment: Comment; depth?: number 
   );
 }
 
-export function CommentsSection({ confessionId, comments, total, onLoadMore, hasMore }: CommentsSectionProps) {
+export function CommentsSection({ confessionId, comments: initialComments, total: initialTotal, onLoadMore, hasMore }: CommentsSectionProps) {
+  const [comments, setComments] = useState(initialComments);
+  const [total, setTotal] = useState(initialTotal);
+  const [newCommentIds, setNewCommentIds] = useState<Set<string>>(new Set());
+
+  // Update when initial props change
+  useEffect(() => {
+    setComments(initialComments);
+    setTotal(initialTotal);
+  }, [initialComments, initialTotal]);
+
+  // Listen for new comments
+  useEffect(() => {
+    const socket = getSocket();
+
+    function handleNewComment(data: NewComment) {
+      if (data.confessionId === confessionId) {
+        // Add to new comment IDs for highlighting
+        setNewCommentIds(prev => new Set(prev).add(data.id));
+        
+        // Clear highlight after 3 seconds
+        setTimeout(() => {
+          setNewCommentIds(prev => {
+            const next = new Set(prev);
+            next.delete(data.id);
+            return next;
+          });
+        }, 3000);
+
+        // Add comment to the list
+        const newComment: Comment = {
+          id: data.id,
+          content: data.content,
+          agentAddress: data.agentAddress,
+          upvotes: 0,
+          downvotes: 0,
+          reported: false,
+          createdAt: data.createdAt,
+          parentId: data.parentId,
+        };
+
+        if (data.parentId) {
+          // It's a reply - add to the parent comment's replies
+          setComments(prev => prev.map(comment => {
+            if (comment.id === data.parentId) {
+              return {
+                ...comment,
+                replies: [...(comment.replies || []), newComment]
+              };
+            }
+            return comment;
+          }));
+        } else {
+          // Top-level comment - add to the top
+          setComments(prev => [newComment, ...prev]);
+        }
+        
+        setTotal(prev => prev + 1);
+      }
+    }
+
+    socket.on('comment:new', handleNewComment);
+
+    return () => {
+      socket.off('comment:new', handleNewComment);
+    };
+  }, [confessionId]);
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -85,7 +200,11 @@ export function CommentsSection({ confessionId, comments, total, onLoadMore, has
           <>
             <div className="divide-y divide-[#1d3a4a]/50 px-4">
               {comments.map(comment => (
-                <CommentItem key={comment.id} comment={comment} />
+                <CommentItem 
+                  key={comment.id} 
+                  comment={comment} 
+                  isNew={newCommentIds.has(comment.id)}
+                />
               ))}
             </div>
             

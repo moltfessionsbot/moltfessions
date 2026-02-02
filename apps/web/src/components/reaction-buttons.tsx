@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getSocket } from '@/lib/socket';
 
 interface ReactionButtonsProps {
   confessionId: string;
@@ -21,6 +22,40 @@ const REACTIONS = [
 export function ReactionButtons({ confessionId, reactions, compact = false, onReact }: ReactionButtonsProps) {
   const [hoveredReaction, setHoveredReaction] = useState<string | null>(null);
   const [localReactions, setLocalReactions] = useState(reactions);
+  const [recentlyUpdated, setRecentlyUpdated] = useState<string | null>(null);
+
+  // Listen for real-time reaction updates
+  useEffect(() => {
+    const socket = getSocket();
+
+    function handleReactionUpdate(data: { confessionId: string; reactions: Record<string, number> }) {
+      if (data.confessionId === confessionId) {
+        // Find which reaction changed
+        const changedReaction = Object.keys(data.reactions).find(
+          key => data.reactions[key] !== localReactions[key]
+        );
+        
+        setLocalReactions(data.reactions);
+        
+        // Highlight the changed reaction
+        if (changedReaction) {
+          setRecentlyUpdated(changedReaction);
+          setTimeout(() => setRecentlyUpdated(null), 1000);
+        }
+      }
+    }
+
+    socket.on('reaction:update', handleReactionUpdate);
+
+    return () => {
+      socket.off('reaction:update', handleReactionUpdate);
+    };
+  }, [confessionId, localReactions]);
+
+  // Update when initial reactions prop changes
+  useEffect(() => {
+    setLocalReactions(reactions);
+  }, [reactions]);
 
   const handleReact = async (type: string) => {
     // Optimistic update
@@ -47,7 +82,12 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
     return (
       <div className="flex items-center gap-1.5">
         {topReactions.map(r => (
-          <span key={r.type} className="flex items-center gap-0.5 text-xs">
+          <span 
+            key={r.type} 
+            className={`flex items-center gap-0.5 text-xs transition-transform ${
+              recentlyUpdated === r.type ? 'scale-125' : ''
+            }`}
+          >
             <span>{r.emoji}</span>
             <span className="text-[#6b9dad] font-mono">{localReactions[r.type]}</span>
           </span>
@@ -65,6 +105,7 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
         {REACTIONS.map(reaction => {
           const count = localReactions[reaction.type] || 0;
           const isHovered = hoveredReaction === reaction.type;
+          const isUpdated = recentlyUpdated === reaction.type;
           
           return (
             <div
@@ -78,11 +119,18 @@ export function ReactionButtons({ confessionId, reactions, compact = false, onRe
                   ? 'bg-[#1d3a4a]/50 border-[#4fc3f7]/30' 
                   : 'bg-[#11181f] border-[#2d4a5a]'
                 }
+                ${isUpdated ? 'scale-110 ring-2 ring-[#4fc3f7]/50' : ''}
               `}
             >
-              <span className="text-base">{reaction.emoji}</span>
+              <span className={`text-base transition-transform ${isUpdated ? 'animate-bounce' : ''}`}>
+                {reaction.emoji}
+              </span>
               {count > 0 && (
-                <span className="text-xs font-mono text-[#8ba5b5]">{count}</span>
+                <span className={`text-xs font-mono transition-colors ${
+                  isUpdated ? 'text-[#4fc3f7]' : 'text-[#8ba5b5]'
+                }`}>
+                  {count}
+                </span>
               )}
               
               {/* Tooltip */}
