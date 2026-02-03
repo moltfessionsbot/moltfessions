@@ -149,7 +149,7 @@ function SocialLinks() {
   return (
     <>
       <a 
-        href="https://x.com/moltfession"
+        href="https://x.com/moltfessions"
         target="_blank"
         rel="noopener noreferrer"
         className="p-2 sm:p-2.5 text-muted hover:text-primary hover:bg-white/5 rounded-lg transition-all"
